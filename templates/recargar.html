@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Recargar Saldo</title>
+</head>
+<body>
+
+    <h2>Recargar Saldo</h2>
+
+    <form action="/guardar_recarga" method="POST">
+        <input type="number" step="0.01" name="monto" placeholder="Monto" required><br><br>
+
+        <select name="metodo" required>
+            <option value="">Seleccionar método</option>
+            <option value="Transferencia">Transferencia</option>
+            <option value="Tarjeta">Tarjeta</option>
+            <option value="Paypal">Paypal</option>
+        </select>
+
+        <br><br>
+
+        <button type="submit">Enviar Recarga</button>
+    </form>
+
+    <br>
+    <a href="/panel">Volver al panel</a>
+
+</body>
+</html>

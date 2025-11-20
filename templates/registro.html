@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* MITAD IZQUIERDA: IMAGEN */
+        .left-image {
+            width: 50%;
+            background-image: url("{{ url_for('static', filename='Img/ronaldo2.jpg') }}");
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* MITAD DERECHA: FONDO NEGRO */
+        .right-form {
+            width: 50%;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+        }
+
+        /* TARJETA BLANCA */
+        .form-box {
+            width: 360px;
+            background: #ffffff;        /* FONDO BLANCO */
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+        }
+
+        .form-box h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #111;
+        }
+
+        .form-box input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
+            border-radius: 6px;
+            border: 1px solid #999;
+            color: #000;
+            background: #f8f8f8;
+        }
+
+        .form-box input:focus {
+            outline: none;
+            border-color: #00b36b;
+        }
+
+        .form-box button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            background: #00b36b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .form-box button:hover {
+            background: #00ff99;
+        }
+
+        /* TOPBAR */
+        .topbar {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+        }
+
+        .topbar a {
+            color: white;
+            margin-left: 20px;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .topbar a:hover {
+            color: #00ff99;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="topbar">
+    <a href="/">Inicio</a>
+</div>
+
+<!-- MITAD IZQUIERDA: IMAGEN -->
+<div class="left-image"></div>
+
+<!-- MITAD DERECHA: FORMULARIO BLANCO -->
+<div class="right-form">
+    <div class="form-box">
+
+        <h2>Crear Cuenta</h2>
+
+        <form action="/agregar_usuario" method="POST">
+
+            <input type="text" name="nombre" placeholder="Nombre" required>
+            <input type="text" name="apellido" placeholder="Apellido" required>
+            <input type="email" name="email" placeholder="Correo electrónico" required>
+            <input type="password" name="contraseña" placeholder="Contraseña" required>
+
+            <button type="submit">Registrarse</button>
+
+        </form>
+
+    </div>
+</div>
+
+</body>
+</html>

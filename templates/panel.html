@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Apuestas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <header class="top-bar">
+        <div class="logo-area">BETWIN 95</div>
+        
+        <div class="user-area">
+            <div class="user-info">
+                Bienvenido, <b>{{ nombre }}</b> 
+                <span class="saldo-badge">$ {{ saldo }}</span>
+            </div>
+            <a href="/recargar" class="btn-header recargar">+ Recargar</a>
+            <a href="/logout" class="btn-header logout">Salir</a>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <aside class="sidebar">
+            <div class="menu-item active" onclick="filtrar('todos', this)">🏠 Todos</div>
+            <div class="menu-item" onclick="filtrar('futbol', this)">⚽ Fútbol</div>
+            <div class="menu-item" onclick="filtrar('basket', this)">🏀 Basket</div>
+        </aside>
+
+        <main class="content">
+            
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="msg-success">{{ messages[0] }}</div>
+                {% endif %}
+            {% endwith %}
+
+            {% for p in partidos %}
+            {% set c1 = p.cuotas['1'] %}
+            {% set cX = p.cuotas['X'] %}
+            {% set c2 = p.cuotas['2'] %}
+
+            <div class="match-card" data-categoria="{{ p.categoria }}">
+                <div class="match-info">
+                    <div class="liga-tag">{{ p.liga }} • {{ p.tiempo }}</div>
+                    <div class="team-row">
+                        <img src="{{ url_for('static', filename='img/' + p.img_local) }}" class="team-logo" onerror="this.style.display='none'"> {{ p.local }}
+                    </div>
+                    <div class="team-row">
+                        <img src="{{ url_for('static', filename='img/' + p.img_visitante) }}" class="team-logo" onerror="this.style.display='none'"> {{ p.visitante }}
+                    </div>
+                </div>
+                <div class="odds-grid">
+                    <div id="btn_{{p.id}}_1" class="odd-btn" onclick="toggleApuesta('{{p.id}}', '{{p.local}} vs {{p.visitante}}', '{{p.local}}', '{{c1}}', '1')">
+                        <span class="odd-desc">1</span><span class="odd-val">{{ c1 }}</span>
+                    </div>
+                    <div id="btn_{{p.id}}_X" class="odd-btn" onclick="toggleApuesta('{{p.id}}', '{{p.local}} vs {{p.visitante}}', 'Empate', '{{cX}}', 'X')">
+                        <span class="odd-desc">X</span><span class="odd-val">{{ cX }}</span>
+                    </div>
+                    <div id="btn_{{p.id}}_2" class="odd-btn" onclick="toggleApuesta('{{p.id}}', '{{p.local}} vs {{p.visitante}}', '{{p.visitante}}', '{{c2}}', '2')">
+                        <span class="odd-desc">2</span><span class="odd-val">{{ c2 }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </main>
+
+        <aside class="ticket-panel">
+            <div class="ticket-header">Cupón</div>
+            <div id="lista-apuestas"><p style="text-align:center; color:#666; margin-top:20px;">Vacío</p></div>
+            
+            <form action="/procesar_apuesta" method="POST" id="form-final" style="display:none;">
+                <div class="payment-zone">
+                    <div style="display:flex; justify-content:space-between; color:var(--accent); font-weight:bold;">
+                        <span>Cuota:</span><span id="total-cuota">1.00</span>
+                    </div>
+                    <input type="hidden" name="datos_apuestas" id="input-json">
+                    <label style="font-size:12px; color:#888; margin-top:10px; display:block;">Apostar ($)</label>
+                    <input type="number" name="monto_apuesta" id="monto" value="10" oninput="calcularGanancia()">
+                    <div style="text-align:center; margin-bottom:10px;">Ganancia: <span id="ganancia" style="color:var(--accent); font-weight:bold;">$0.00</span></div>
+                    
+                    <button type="submit" class="btn-pagar">APOSTAR</button>
+                </div>
+            </form>
+        </aside>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

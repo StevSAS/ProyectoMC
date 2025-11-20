@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+
+    <style>
+        body { margin: 0; font-family: Arial; background: #f4f4f4; }
+        .topbar {
+            background: #222;
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .topbar .left a, .topbar .right a {
+            color: white;
+            margin-left: 15px;
+            text-decoration: none;
+        }
+        .topbar a:hover {
+            color: #00ff99;
+        }
+        .username {
+            font-weight: bold;
+            margin-right: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    {% if session.id_usuario %}
+    <div class="topbar">
+
+        <div class="left">
+            <span class="username">{{ session.nombre }}</span>
+            <span>Saldo: ${{ session.saldo }}</span>
+        </div>
+
+        <div class="right">
+            <a href="/recargar">Recargar</a>
+            <a href="/logout">Cerrar sesión</a>
+        </div>
+
+    </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,225 @@
+/* =========================================
+   1. VARIABLES Y COLORES (TEMA ECUABET)
+   ========================================= */
+:root {
+    --bg-body: #1c1c1c;       /* Fondo principal muy oscuro */
+    --bg-panel: #262626;      /* Fondo de los menús laterales */
+    --bg-card: #333333;       /* Fondo de las tarjetas */
+    --accent: #ffc107;        /* AMARILLO DORADO */
+    --text-main: #ffffff;     /* Texto blanco */
+    --text-muted: #b0b0b0;    /* Texto gris suave */
+}
+
+/* =========================================
+   2. ESTRUCTURA PRINCIPAL (LAYOUT)
+   ========================================= */
+body {
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    margin: 0;
+    display: block; /* Bloque normal para permitir el header arriba */
+}
+
+/* Barra Superior Negra (HEADER NUEVO) */
+.top-bar {
+    height: 60px;
+    background: #000;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+}
+
+.logo-area { font-size: 20px; font-weight: bold; color: var(--accent); letter-spacing: 1px;}
+
+/* Contenedor Principal (Debajo del header) */
+.main-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr 300px; /* Menú | Contenido | Cupón */
+    height: calc(100vh - 60px); /* Altura total menos el header */
+}
+
+/* =========================================
+   3. MENÚ LATERAL IZQUIERDO
+   ========================================= */
+.sidebar {
+    background-color: var(--bg-panel);
+    border-right: 1px solid #444;
+}
+
+.menu-item {
+    padding: 15px 20px;
+    border-bottom: 1px solid #333;
+    cursor: pointer;
+    transition: 0.3s;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+}
+
+.menu-item:hover { background-color: #3a3a3a; color: white; }
+
+.menu-item.active {
+    background-color: #333;
+    color: var(--accent);
+    border-left: 4px solid var(--accent);
+    font-weight: bold;
+}
+
+/* =========================================
+   4. CONTENIDO CENTRAL (PARTIDOS)
+   ========================================= */
+.content {
+    padding: 20px;
+    overflow-y: auto;
+    height: 100%; /* Ocupar todo el espacio disponible */
+    box-sizing: border-box;
+}
+
+/* Tarjeta de Partido */
+.match-card {
+    background-color: var(--bg-card);
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    display: grid;
+    grid-template-columns: 1.5fr 2fr;
+    gap: 15px;
+    align-items: center;
+    border: 1px solid #444;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.match-info { font-size: 14px; }
+.liga-tag { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom:5px;}
+.team-row { display: flex; align-items: center; margin-bottom: 5px; font-weight: bold; font-size: 15px; }
+.team-logo { width: 20px; height: 20px; margin-right: 10px; object-fit: contain; }
+
+/* Botones de Cuotas */
+.odds-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.odd-btn {
+    background: #454545;
+    border-radius: 4px;
+    padding: 10px 0;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.2s;
+    border: 1px solid transparent;
+}
+.odd-btn:hover { background: #555; border-color: #777; }
+.odd-btn.selected {
+    background: var(--accent);
+    color: #000;
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.4);
+}
+.odd-desc { font-size: 10px; display: block; opacity: 0.7; }
+.odd-val { font-size: 15px; font-weight: bold; }
+
+/* =========================================
+   5. BARRA DERECHA (CUPÓN)
+   ========================================= */
+.ticket-panel {
+    background-color: var(--bg-panel);
+    border-left: 1px solid #444;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.ticket-header {
+    background: var(--accent);
+    color: black;
+    padding: 15px;
+    font-weight: bold;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+#lista-apuestas { flex-grow: 1; padding: 10px; overflow-y: auto; }
+
+.ticket-item {
+    background: #333;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    position: relative;
+    border-left: 3px solid var(--accent);
+    font-size: 13px;
+}
+
+.btn-delete {
+    position: absolute; top: 5px; right: 5px;
+    background: none; border: none; color: #ff5555; cursor: pointer; font-weight: bold;
+}
+
+.payment-zone { background: #1a1a1a; padding: 20px; border-top: 1px solid #444; }
+
+input[type="number"] {
+    width: 100%; background: #000; border: 1px solid #555; color: white;
+    padding: 12px; box-sizing: border-box; margin-bottom: 10px;
+    font-size: 16px; border-radius: 4px;
+}
+
+.btn-pagar {
+    width: 100%; background: var(--accent); color: black; border: none;
+    padding: 15px; font-weight: bold; cursor: pointer;
+    text-transform: uppercase; font-size: 16px; border-radius: 4px;
+}
+.btn-pagar:hover { background: #ffca2c; }
+
+/* =========================================
+   6. ESTILOS DEL HEADER Y MODALES (NUEVO)
+   ========================================= */
+.btn-header {
+    padding: 8px 15px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    margin-left: 10px;
+    font-size: 14px;
+}
+.btn-header.login { background: var(--accent); color: black; }
+.btn-header.recargar { background: #2e7d32; color: white; }
+.btn-header.logout { background: #333; color: #aaa; text-decoration: none; display: inline-block;}
+.saldo-badge { color: var(--accent); font-size: 16px; margin-left: 5px; font-weight: bold; }
+
+/* Modales */
+.modal-overlay {
+    display: none;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    justify-content: center; align-items: center;
+    z-index: 1000; backdrop-filter: blur(5px);
+}
+
+.modal-box {
+    background: #262626; padding: 30px; width: 400px;
+    border-radius: 8px; border: 1px solid var(--accent);
+    position: relative; text-align: center;
+    box-shadow: 0 0 20px rgba(255, 193, 7, 0.2);
+}
+
+.close-btn {
+    position: absolute; top: 10px; right: 15px;
+    font-size: 24px; cursor: pointer; color: #aaa;
+}
+
+.metodos-pago { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; }
+.metodos-pago span { background: #333; padding: 10px; border-radius: 4px; cursor: pointer; border: 1px solid #444;}
+
+/* Mensajes */
+.msg-success {
+    background: rgba(46, 125, 50, 0.2); color: #66bb6a;
+    padding: 15px; margin-bottom: 20px;
+    border: 1px solid #2e7d32; border-radius: 4px; text-align: center; font-weight: bold;
+}
+.msg-error {
+    background: rgba(255, 0, 0, 0.2); color: #ff5252;
+    padding: 10px; margin-bottom: 20px;
+    border: 1px solid #ff5252; border-radius: 4px; text-align: center;
+}
