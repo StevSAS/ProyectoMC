@@ -23,3 +23,5 @@ CREATE TABLE IF NOT EXISTS detalles_apuesta (
     FOREIGN KEY (id_partido) REFERENCES partidos(id)
 );
 ***********agregue eso a la base de datos ***********
+
+prueba de no force
