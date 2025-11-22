@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mis Apuestas - BETUTM 71</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Estilos específicos para el historial */
+        .history-container { max-width: 800px; margin: 30px auto; padding: 0 20px; }
+        
+        .ticket-history-card {
+            background: #262626;
+            border: 1px solid #444;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .ticket-head {
+            background: #333;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #444;
+        }
+        
+        .status-tag {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-pendiente { background: #ff9800; color: black; }
+        .status-ganada { background: #4caf50; color: white; }
+        .status-perdida { background: #f44336; color: white; }
+
+        .ticket-body { padding: 15px; }
+        
+        .bet-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #3a3a3a;
+            font-size: 14px;
+        }
+        .bet-row:last-child { border-bottom: none; }
+        
+        .match-name { color: #ccc; }
+        .pick-info { color: var(--accent); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <header class="top-bar">
+        <div class="logo-area">
+    <span style="color: #ffffff;">BET</span><span style="color: #ffc107;">UTM 71</span>
+</div>
+        <div class="user-area">
+            <div class="user-info">Saldo: <span class="saldo-badge">$ {{ saldo }}</span></div>
+            <a href="/panel" class="btn-header logout" style="background:#444; color:white;">⬅ Volver</a>
+        </div>
+    </header>
+
+    <div class="history-container">
+        <h2 style="color: var(--accent); border-bottom: 2px solid var(--accent); display:inline-block; margin-bottom: 20px;">
+            Historial de Apuestas
+        </h2>
+
+        {% if tickets|length == 0 %}
+            <p style="color: #888;">No tienes apuestas realizadas todavía.</p>
+        {% endif %}
+
+        {% for t in tickets %}
+        <div class="ticket-history-card">
+            <div class="ticket-head">
+                <div>
+                    <div style="font-weight:bold; color:white;">Ticket #{{ t.id_ticket }}</div>
+                    <div style="font-size:12px; color:#888;">{{ t.fecha }}</div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="color:#aaa; font-size:12px;">Apostado: ${{ t.monto_total }}</div>
+                    <div style="color:white; font-weight:bold;">Posible Ganancia: <span style="color:var(--accent)">${{ t.ganancia_posible }}</span></div>
+                </div>
+                <span class="status-tag status-{{ t.estado }}">{{ t.estado }}</span>
+            </div>
+
+            <div class="ticket-body">
+                {% for item in t.lista_detalles %}
+                <div class="bet-row">
+                    <div>
+                        <div class="match-name">{{ item.local }} vs {{ item.visitante }}</div>
+                        <div style="font-size:11px; color:#666;">{{ item.liga }}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="pick-info">Tu elección: {{ item.seleccion }}</div>
+                        <div style="font-size:12px; color:#888;">Cuota: {{ item.cuota_momento }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</body>
+</html>

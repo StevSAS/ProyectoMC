@@ -223,3 +223,268 @@ input[type="number"] {
     padding: 10px; margin-bottom: 20px;
     border: 1px solid #ff5252; border-radius: 4px; text-align: center;
 }
+
+/* =========================================
+   7. ESTILOS PÁGINA DE RECARGA (NUEVO)
+   ========================================= */
+
+/* Centrar la caja en la pantalla */
+.payment-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 60px); /* Altura menos el header */
+    background-image: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('../img/estadio_fondo.jpg'); /* Si tienes fondo, sino sale negro */
+    background-size: cover;
+}
+
+.payment-card {
+    background: #262626;
+    padding: 40px;
+    width: 450px;
+    border-radius: 10px;
+    border: 1px solid #444;
+    box-shadow: 0 0 30px rgba(255, 193, 7, 0.1);
+}
+
+/* Grid de métodos de pago */
+.methods-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+/* Ocultar el radio button feo por defecto */
+.method-item input[type="radio"] {
+    display: none;
+}
+
+/* El cuadro visual del botón */
+.method-box {
+    display: block;
+    background: #333;
+    color: #aaa;
+    padding: 15px 5px;
+    text-align: center;
+    border-radius: 5px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: 0.3s;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.method-box:hover {
+    background: #444;
+    color: white;
+}
+
+/* Cuando el radio está seleccionado (checked), cambiar estilo */
+.method-item input[type="radio"]:checked + .method-box {
+    background: var(--accent);
+    color: black;
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+}
+
+/* Input grande */
+.input-dark {
+    width: 100%;
+    padding: 15px;
+    background: #111;
+    border: 1px solid #555;
+    color: white;
+    font-size: 18px;
+    border-radius: 5px;
+    box-sizing: border-box;
+    margin-top: 5px;
+}
+.input-dark:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+/* --- ESTILOS SOLO PARA LA CASILLA DE LOGIN --- */
+    
+    /* El fondo oscuro transparente detrás del cuadro */
+    .modal-overlay {
+        display: none;
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.85); /* Fondo más oscuro para resaltar la caja */
+        justify-content: center; align-items: center;
+        z-index: 9999;
+        backdrop-filter: blur(5px); /* Efecto borroso al fondo */
+    }
+
+    /* La caja bonita */
+    .modal-box {
+        background: #1e1e1e;
+        padding: 40px;
+        width: 100%;
+        max-width: 380px;
+        border-radius: 12px;
+        border: 1px solid #333;
+        text-align: center;
+        box-shadow: 0 0 40px rgba(255, 193, 7, 0.2); /* Resplandor dorado suave */
+        position: relative;
+        animation: aparecer 0.3s ease-out;
+    }
+
+    /* Inputs modernos oscuros */
+    .input-login {
+        width: 100%;
+        padding: 14px;
+        margin-bottom: 15px;
+        background: #121212;
+        border: 1px solid #444;
+        border-radius: 6px;
+        color: white;
+        font-size: 16px;
+        box-sizing: border-box;
+        outline: none;
+        transition: 0.3s;
+    }
+
+    .input-login:focus {
+        border-color: #ffc107; /* Borde dorado al escribir */
+        background: #000;
+    }
+
+    /* Botón amarillo fuerte */
+    .btn-submit-login {
+        width: 100%;
+        padding: 15px;
+        background: #ffc107; /* Amarillo */
+        color: black;
+        font-weight: 900;
+        font-size: 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        margin-top: 10px;
+        text-transform: uppercase;
+        transition: 0.3s;
+    }
+
+    .btn-submit-login:hover {
+        background: #ffdb4d;
+        transform: translateY(-2px); /* Efecto de levantarse */
+    }
+
+    .close-btn {
+        position: absolute; top: 15px; right: 20px;
+        font-size: 30px; cursor: pointer; color: #666;
+        background: none; border: none; padding: 0;
+    }
+    .close-btn:hover { color: white; }
+
+    @keyframes aparecer {
+        from { transform: translateY(-20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* =========================================
+   8. MEJORA DEL HEADER (LUJO)
+   ========================================= */
+
+/* Ajustes generales de la barra */
+.top-bar {
+    height: 70px;
+    background: #121212; /* Negro profundo */
+    border-bottom: 1px solid #333;
+    padding: 0 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+/* Logo */
+.logo-area {
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    font-style: italic;
+}
+
+/* Contenedor derecho */
+.user-area {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Grupo de Info (Nombre y Saldo) */
+.user-info-group {
+    text-align: right;
+    border-right: 1px solid #333;
+    padding-right: 20px;
+}
+
+.user-name {
+    font-size: 12px;
+    color: #888;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.user-balance {
+    font-size: 18px;
+    color: var(--accent); /* Dorado */
+    font-weight: 900;
+    font-family: 'Consolas', monospace; /* Tipo numérico */
+}
+
+/* Grupo de Botones */
+.actions-group {
+    display: flex;
+    gap: 10px;
+}
+
+/* Estilo base de los botones nuevos */
+.btn-action {
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+/* Botón Depositar (Dorado) */
+.btn-deposit {
+    background: var(--accent);
+    color: #000;
+}
+.btn-deposit:hover {
+    background: #fff;
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.4);
+}
+
+/* Botón Historial (Oscuro con borde) */
+.btn-history {
+    background: #1e1e1e;
+    color: #ccc;
+    border: 1px solid #444;
+}
+.btn-history:hover {
+    border-color: var(--accent);
+    color: white;
+}
+
+/* Botón Salir (Solo icono rojo sutil) */
+.btn-logout {
+    background: transparent;
+    color: #666;
+    padding: 8px;
+    font-size: 16px;
+}
+.btn-logout:hover {
+    color: #ff4444;
+    background: rgba(255, 68, 68, 0.1);
+}

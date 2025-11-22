@@ -2,137 +2,242 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Registro</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Cuenta - BETUTM 71</title>
+    <!-- Usamos tu CSS principal para mantener la consistencia de colores -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
-        * {
+        /* --- ESTILOS EXCLUSIVOS DE REGISTRO --- */
+        body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-            font-family: Arial;
-        }
-
-        body {
-            display: flex;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #000; /* Fondo negro total */
             height: 100vh;
-            width: 100%;
+            display: flex;
+            overflow: hidden; /* Evita scroll si no es necesario */
         }
 
-        /* MITAD IZQUIERDA: IMAGEN */
-        .left-image {
-            width: 50%;
-            background-image: url("{{ url_for('static', filename='Img/ronaldo2.jpg') }}");
-            background-size: cover;
-            background-position: center;
+        /* --- MITAD IZQUIERDA (IMAGEN) --- */
+        .split-left {
+            flex: 1.2; /* Ocupa un poco más de la mitad */
+            position: relative;
+            background: url("{{ url_for('static', filename='Img/ronaldo2.jpg') }}") no-repeat center center/cover;
         }
 
-        /* MITAD DERECHA: FONDO NEGRO */
-        .right-form {
-            width: 50%;
+        /* Capa oscura sobre la imagen para que se vea elegante */
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to right, rgba(0,0,0,0.3), #000); /* Degrada a negro hacia la derecha */
+        }
+
+        /* Texto sobre la imagen (Opcional) */
+        .brand-text {
+            position: absolute;
+            bottom: 40px;
+            left: 40px;
+            color: white;
+            z-index: 2;
+        }
+        .brand-text h1 {
+            font-size: 48px;
+            font-weight: 900;
+            margin: 0;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .brand-text p {
+            font-size: 18px;
+            color: #ccc;
+            margin-top: 10px;
+            max-width: 400px;
+        }
+
+        /* --- MITAD DERECHA (FORMULARIO) --- */
+        .split-right {
+            flex: 0.8; /* Ocupa un poco menos */
             background: #000;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 30px;
+            padding: 40px;
+            position: relative;
         }
 
-        /* TARJETA BLANCA */
-        .form-box {
-            width: 360px;
-            background: #ffffff;        /* FONDO BLANCO */
-            padding: 35px;
-            border-radius: 12px;
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
-        }
-
-        .form-box h2 {
-            text-align: center;
-            margin-bottom: 25px;
-            color: #111;
-        }
-
-        .form-box input {
-            width: 100%;
-            padding: 12px;
-            margin-top: 12px;
-            border-radius: 6px;
-            border: 1px solid #999;
-            color: #000;
-            background: #f8f8f8;
-        }
-
-        .form-box input:focus {
-            outline: none;
-            border-color: #00b36b;
-        }
-
-        .form-box button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 20px;
-            background: #00b36b;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .form-box button:hover {
-            background: #00ff99;
-        }
-
-        /* TOPBAR */
-        .topbar {
+        /* Botón flotante de "Volver al Inicio" */
+        .top-nav {
             position: absolute;
-            top: 0;
-            right: 0;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 15px;
+            top: 30px;
+            right: 40px;
         }
-
-        .topbar a {
-            color: white;
-            margin-left: 20px;
+        .link-home {
+            color: #888;
             text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: 0.3s;
+        }
+        .link-home:hover { color: var(--accent); }
+
+        /* Caja del Formulario */
+        .register-box {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .register-box h2 {
+            color: white;
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .register-box p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        /* Inputs Modernos */
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-dark {
+            width: 100%;
+            padding: 15px;
+            background: #121212; /* Negro un poco más claro */
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: white;
             font-size: 16px;
+            outline: none;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
         }
 
-        .topbar a:hover {
-            color: #00ff99;
+        .input-dark:focus {
+            border-color: var(--accent); /* Borde dorado al escribir */
+            background: #1a1a1a;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.1);
         }
 
+        .input-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        /* Botón de Registro */
+        .btn-register {
+            width: 100%;
+            padding: 15px;
+            background: var(--accent);
+            color: black;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 900;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-register:hover {
+            background: #ffca2c; /* Amarillo más claro */
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.3);
+        }
+
+        /* Link de Login */
+        .login-link {
+            margin-top: 25px;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+        }
+        .login-link a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        /* Responsivo para móviles */
+        @media (max-width: 900px) {
+            body { flex-direction: column; overflow: auto; }
+            .split-left { height: 200px; flex: none; }
+            .brand-text { display: none; } /* Ocultar texto en móvil */
+            .split-right { flex: 1; padding: 40px 20px; }
+        }
     </style>
 </head>
-
 <body>
 
-<div class="topbar">
-    <a href="/">Inicio</a>
-</div>
-
-<!-- MITAD IZQUIERDA: IMAGEN -->
-<div class="left-image"></div>
-
-<!-- MITAD DERECHA: FORMULARIO BLANCO -->
-<div class="right-form">
-    <div class="form-box">
-
-        <h2>Crear Cuenta</h2>
-
-        <form action="/agregar_usuario" method="POST">
-
-            <input type="text" name="nombre" placeholder="Nombre" required>
-            <input type="text" name="apellido" placeholder="Apellido" required>
-            <input type="email" name="email" placeholder="Correo electrónico" required>
-            <input type="password" name="contraseña" placeholder="Contraseña" required>
-
-            <button type="submit">Registrarse</button>
-
-        </form>
-
+    <!-- LADO IZQUIERDO: IMAGEN Y MARCA -->
+    <div class="split-left">
+        <div class="overlay"></div>
+        <div class="brand-text">
+            <h1 style="font-weight: 900; font-style: italic; text-transform: uppercase; font-size: 48px; margin: 0;">
+    <span style="color: #ffffff;">BET</span><span style="color: #ffc107;">UTM 71</span>
+</h1>
+            <p>Únete a la comunidad de ganadores más grande. Las mejores cuotas te esperan.</p>
+        </div>
     </div>
-</div>
+
+    <!-- LADO DERECHO: FORMULARIO -->
+    <div class="split-right">
+        
+        <!-- Navegación Superior -->
+        <div class="top-nav">
+            <a href="/" class="link-home">✕ Cancelar</a>
+        </div>
+
+        <div class="register-box">
+            <h2>Crear una cuenta</h2>
+            <p>Completa tus datos para empezar a apostar.</p>
+
+            <!-- MENSAJES DE ERROR (FLASH) -->
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div style="background: rgba(255,0,0,0.1); color: #ff5252; padding: 10px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #ff5252; font-size: 13px;">
+                        {{ messages[0] }}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <form action="/agregar_usuario" method="POST">
+                
+                <!-- Nombre y Apellido en la misma línea -->
+                <div class="input-row">
+                    <div class="input-group" style="flex: 1;">
+                        <input type="text" name="nombre" placeholder="Nombre" class="input-dark" required>
+                    </div>
+                    <div class="input-group" style="flex: 1;">
+                        <input type="text" name="apellido" placeholder="Apellido" class="input-dark" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <input type="email" name="email" placeholder="Correo electrónico" class="input-dark" required>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" name="contraseña" placeholder="Contraseña" class="input-dark" required>
+                </div>
+
+                <button type="submit" class="btn-register">Registrarse Ahora</button>
+            </form>
+
+            <div class="login-link">
+                ¿Ya tienes cuenta? <a href="/">Inicia sesión aquí</a>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>

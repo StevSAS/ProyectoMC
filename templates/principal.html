@@ -2,142 +2,119 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Inicio</title>
-
+    <title>Bienvenido - BetUTM 71</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
-        body {
-            margin: 0;
-            font-family: Arial;
+        /* Estilos exclusivos de la portada */
+        .hero-section {
             height: 100vh;
-            background: url("{{ url_for('static', filename='Img/femenino.jpeg') }}") no-repeat center center/cover;
-        }
-
-        .topbar {
-            background: rgba(0, 0, 0, 0.6);
-            padding: 15px;
-            text-align: right;
-        }
-
-        .topbar a {
-            color: white;
-            margin-left: 20px;
-            text-decoration: none;
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .topbar a:hover {
-            color: #00ff99;
-        }
-
-        /* Texto centrado */
-        .titulo {
-            text-align: center;
-            margin-top: 80px;
-            font-size: 40px;
-            font-weight: bold;
-            color: white;
-            text-shadow: 2px 2px 8px black;
-        }
-
-        /* Fondo oscuro modal */
-        .modal-bg {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(5px);
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url("{{ url_for('static', filename='Img/femenino.jpeg') }}");
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-        }
-
-        /* Caja del formulario */
-        .modal {
-            background: white;
-            padding: 30px;
-            width: 350px;
-            border-radius: 15px;
-            animation: aparecer 0.6s ease;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-        }
-
-        @keyframes aparecer {
-            0% { transform: translateY(-30px); opacity: 0; }
-            100% { transform: translateY(0); opacity: 1; }
-        }
-
-        .close-btn {
-            float: right;
-            background: red;
             color: white;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-            border-radius: 5px;
+            text-align: center;
         }
 
-        .modal input {
-            width: 100%;
-            padding: 10px;
-            margin: 8px 0;
-            border: 1px solid #aaa;
-            border-radius: 8px;
+        .hero-title {
+            font-size: 60px;
+            font-weight: 900;
+            color: var(--accent);
+            text-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
+            margin-bottom: 10px;
         }
 
-        button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            background: #00cc66;
+        .hero-subtitle {
+            font-size: 24px;
+            margin-bottom: 40px;
+            color: #ddd;
+        }
+
+        .btn-hero {
+            padding: 15px 40px;
+            font-size: 20px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+            border: 2px solid var(--accent);
+        }
+
+        .btn-login-hero {
+            background: transparent;
+            color: var(--accent);
+            margin-right: 20px;
+        }
+        .btn-login-hero:hover {
+            background: rgba(255, 193, 7, 0.1);
             color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 16px;
+            border-color: white;
         }
 
-        button:hover {
-            background: #00994d;
+        .btn-register-hero {
+            background: var(--accent);
+            color: black;
         }
-
+        .btn-register-hero:hover {
+            background: #ffca2c;
+            box-shadow: 0 0 20px rgba(255, 193, 7, 0.6);
+        }
     </style>
 </head>
 <body>
 
-<div class="topbar">
-    <a href="#" onclick="abrirModal()">Iniciar Sesión</a>
-    <a href="/registrarse">Registrarse</a>
+    <header class="top-bar" style="background: transparent; position: absolute; top: 0; width: 100%; border: none;">
+        <div class="logo-area" style="font-size: 36px; font-weight: 900; font-style: italic; font-family: 'Arial Black', sans-serif; letter-spacing: 1px;">
+    <span style="color: #ffffff;">BET</span><span style="color: #ffc107;">UTM 71</span>
 </div>
+    </header>
 
-<!-- TEXTO CENTRADO PRINCIPAL -->
-<h1 class="titulo">Bienvenido a la Casa de Apuestas</h1>
-
-<!-- Modal flotante -->
-<div class="modal-bg" id="modalFondo">
-    <div class="modal">
-        <button class="close-btn" onclick="cerrarModal()">X</button>
-        <h2>Iniciar Sesión</h2>
-
-        <form method="POST" action="/login">
-            <input type="email" name="email" placeholder="Correo electrónico" required>
-            <input type="password" name="contraseña" placeholder="Contraseña" required>
-            <button type="submit">Ingresar</button>
-        </form>
+    <div class="hero-section">
+        <h1 class="hero-title">GANA A LO GRANDE</h1>
+        <p class="hero-subtitle">La casa de apuestas más confiable y rápida.</p>
+        
+        <div>
+            <button onclick="abrirModal()" class="btn-hero btn-login-hero" style="cursor:pointer;">INICIAR SESIÓN</button>
+            <a href="/registrarse" class="btn-hero btn-register-hero">REGISTRARSE</a>
+        </div>
     </div>
-</div>
 
-<script>
-    function abrirModal() {
-        document.getElementById("modalFondo").style.display = "flex";
-    }
+    <div id="modal-login" class="modal-overlay">
+        <div class="modal-box">
+            <span class="close-btn" onclick="cerrarModal()">&times;</span>
+            
+            <h2 style="color: #ffc107; margin-bottom: 25px; font-size: 28px; text-transform: uppercase; letter-spacing: 1px;">Acceder</h2>
+            
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div style="color: #ff5252; margin-bottom: 15px; font-size: 14px;">{{ messages[0] }}</div>
+                {% endif %}
+            {% endwith %}
 
-    function cerrarModal() {
-        document.getElementById("modalFondo").style.display = "none";
-    }
-</script>
+            <form action="/login" method="POST">
+                <input type="email" name="email" class="input-login" placeholder="Correo electrónico" required>
+                <input type="password" name="contraseña" class="input-login" placeholder="Contraseña" required>
+                
+                <button type="submit" class="btn-submit-login">ENTRAR AHORA</button>
+            </form>
+            
+            <p style="margin-top: 25px; font-size: 13px; color: #aaa;">
+                ¿No tienes cuenta? <a href="/registrarse" style="color: #ffc107; text-decoration: none; font-weight: bold;">Regístrate aquí</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function abrirModal() {
+            document.getElementById("modal-login").style.display = "flex";
+        }
+        function cerrarModal() {
+            document.getElementById("modal-login").style.display = "none";
+        }
+    </script>
 
 </body>
 </html>
