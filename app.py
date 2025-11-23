@@ -6,8 +6,8 @@ app = Flask(__name__)
 
 # --- CONFIGURACIÓN MYSQL (XAMPP) ---
 app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = ''
+app.config['MYSQL_USER'] = 'Stev'
+app.config['MYSQL_PASSWORD'] = '12345'
 app.config['MYSQL_DB'] = 'apuesta'
 mysql = MySQL(app)
 
@@ -238,6 +238,35 @@ def mis_apuestas():
                            tickets=mis_tickets, 
                            nombre=session['nombre'], 
                            saldo=session['saldo'])
+
+# ==========================================
+# ADMIN
+# ==========================================
+
+@app.route('/admin')
+def admin():
+    return render_template('admin.html')
+
+
+@app.route('/admin/usuarios')
+def admin_usuarios():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT id_usuario, nombre, apellido, email, contraseña, fecha_registro, saldo FROM usuarios")
+    columnas = [desc[0] for desc in cur.description]
+    usuarios = [dict(zip(columnas, row)) for row in cur.fetchall()]
+    cur.close()
+    return render_template('usuarios.html', usuarios=usuarios)
+
+
+@app.route('/admin/partidos')
+def admin_partidos():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT id, categoria, liga, local, visitante, tiempo, cuota_1, cuota_x, cuota_2 FROM partidos")
+    columnas = [desc[0] for desc in cur.description]
+    partidos = [dict(zip(columnas, row)) for row in cur.fetchall()]
+    cur.close()
+    return render_template('partidos.html', partidos=partidos)
+
 
 if __name__ == '__main__':
     app.run(port=3000, debug=True)
