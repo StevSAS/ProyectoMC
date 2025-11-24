@@ -4,10 +4,10 @@ from flask_mysqldb import MySQL
 
 app = Flask(__name__)
 
-# --- CONFIGURACIÓN MYSQL (XAMPP) ---
+# --- CONFIGURACIÓN MYSQL ---
 app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'Stev'
-app.config['MYSQL_PASSWORD'] = '12345'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = 'apuesta'
 mysql = MySQL(app)
 
@@ -36,7 +36,6 @@ def add_contact():
         contraseña = request.form['contraseña']
 
         cur = mysql.connection.cursor()
-        # Guardamos la contraseña tal cual (Texto plano)
         cur.execute("""
             INSERT INTO usuarios (nombre, apellido, email, contraseña, saldo, fecha_registro) 
             VALUES (%s, %s, %s, %s, 0, NOW())
@@ -52,14 +51,14 @@ def login():
         contraseña = request.form['contraseña']
 
         cur = mysql.connection.cursor()
-        # Verificamos usuario y contraseña directamente
-        cur.execute("SELECT id_usuario, nombre, saldo FROM usuarios WHERE email=%s AND contraseña=%s", (email, contraseña))
+        cur.execute("SELECT id_usuario, nombre, saldo, rol FROM usuarios WHERE email=%s AND contraseña=%s", (email, contraseña))
         user = cur.fetchone()
 
         if user:
             session['id_usuario'] = user[0]
             session['nombre'] = user[1]
             session['saldo'] = float(user[2])
+            session['rol'] = user[3]
             return redirect(url_for('panel'))
         else:
             flash("Usuario o contraseña incorrectos")
@@ -104,9 +103,9 @@ def panel():
         lista_final.append(p)
 
     return render_template("panel.html", 
-                           partidos=lista_final, 
-                           saldo=session['saldo'], 
-                           nombre=session['nombre'])
+                partidos=lista_final, 
+                saldo=session['saldo'], 
+                nombre=session['nombre'])
 
 # ==========================================
 # RECARGAS
@@ -152,7 +151,7 @@ def procesar_apuesta():
     
     cur = mysql.connection.cursor()
     
-    # 1. Verificar Saldo
+    #  Verificar Saldo
     cur.execute("SELECT saldo FROM usuarios WHERE id_usuario=%s", (id_usuario,))
     saldo_actual = float(cur.fetchone()[0])
 
@@ -160,27 +159,27 @@ def procesar_apuesta():
         flash("❌ Saldo insuficiente")
         return redirect(url_for('panel'))
 
-    # 2. Calcular Ganancia
+    #  Calcular Ganancia
     cuota_total = 1
     for apuesta in lista_apuestas:
         cuota_total *= float(apuesta['cuota'])
     ganancia = round(monto * cuota_total, 2)
 
-    # 3. Guardar Ticket
+    #  Guardar Ticket
     cur.execute("""
         INSERT INTO tickets (id_usuario, monto_total, ganancia_posible, estado, fecha)
         VALUES (%s, %s, %s, 'pendiente', NOW())
     """, (id_usuario, monto, ganancia))
     id_ticket = cur.lastrowid
 
-    # 4. Guardar Detalles
+    #  Guardar Detalles
     for apuesta in lista_apuestas:
         cur.execute("""
             INSERT INTO detalles_apuesta (id_ticket, id_partido, seleccion, cuota_momento)
             VALUES (%s, %s, %s, %s)
         """, (id_ticket, apuesta['idPartido'], apuesta['seleccion'], apuesta['cuota']))
 
-    # 5. Descontar dinero
+    #  Descontar dinero
     cur.execute("UPDATE usuarios SET saldo = saldo - %s WHERE id_usuario = %s", (monto, id_usuario))
     mysql.connection.commit()
     
@@ -201,7 +200,7 @@ def mis_apuestas():
     id_usuario = session['id_usuario']
     cur = mysql.connection.cursor()
 
-    # 1. Tickets
+    #  Tickets
     cur.execute("SELECT * FROM tickets WHERE id_usuario = %s ORDER BY fecha DESC", (id_usuario,))
     tickets_data = list(cur.fetchall())
 
@@ -214,7 +213,7 @@ def mis_apuestas():
     for row in tickets_data:
         t = dict(zip(columnas_ticket, row))
         
-        # 2. Detalles
+        #  Detalles
         cur.execute("""
             SELECT d.seleccion, d.cuota_momento, p.local, p.visitante, p.liga 
             FROM detalles_apuesta d
@@ -230,33 +229,71 @@ def mis_apuestas():
             for d in detalles_data:
                 items.append(dict(zip(cols_det, d)))
         
-        # Usamos lista_detalles para evitar el error con items()
         t['lista_detalles'] = items
         mis_tickets.append(t)
 
     return render_template('mis_apuestas.html', 
-                           tickets=mis_tickets, 
-                           nombre=session['nombre'], 
-                           saldo=session['saldo'])
+            tickets=mis_tickets, 
+            nombre=session['nombre'], 
+            saldo=session['saldo'])
 
 # ==========================================
-# ADMIN
+# ADMINISTRACIÓN DE USUARIOS
 # ==========================================
 
 @app.route('/admin')
 def admin():
     return render_template('admin.html')
 
-
 @app.route('/admin/usuarios')
 def admin_usuarios():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT id_usuario, nombre, apellido, email, contraseña, fecha_registro, saldo FROM usuarios")
-    columnas = [desc[0] for desc in cur.description]
+    cur.execute("SELECT * FROM usuarios")
+    columnas = [d[0] for d in cur.description]
     usuarios = [dict(zip(columnas, row)) for row in cur.fetchall()]
-    cur.close()
     return render_template('usuarios.html', usuarios=usuarios)
 
+@app.route('/admin/crear_usuario', methods=['POST'])
+def admin_crear_usuario():
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        apellido = request.form['apellido']
+        email = request.form['email']
+        contraseña = request.form['contraseña']
+        saldo = request.form['saldo']
+        cur = mysql.connection.cursor()
+        cur.execute("INSERT INTO usuarios (nombre, apellido, email, contraseña, saldo, fecha_registro) VALUES (%s, %s, %s, %s, %s, NOW())", (nombre, apellido, email, contraseña, saldo))
+        mysql.connection.commit()
+        flash("Usuario creado")
+        return redirect(url_for('admin_usuarios'))
+
+@app.route('/eliminar_usuario/<string:id>')
+def eliminar_usuario(id):
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM recarga WHERE id_usuario = %s", (id,))
+    cur.execute("DELETE FROM tickets WHERE id_usuario = %s", (id,))
+    cur.execute("DELETE FROM usuarios WHERE id_usuario = %s", (id,))
+    mysql.connection.commit()
+    flash("Usuario eliminado")
+    return redirect(url_for('admin_usuarios'))
+
+@app.route('/editar_usuario/<string:id>', methods=['POST'])
+def editar_usuario(id):
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        apellido = request.form['apellido']
+        email = request.form['email']
+        contraseña = request.form['contraseña']
+        saldo = request.form['saldo']
+        cur = mysql.connection.cursor()
+        cur.execute("UPDATE usuarios SET nombre=%s, apellido=%s, email=%s, contraseña=%s, saldo=%s WHERE id_usuario=%s", (nombre, apellido, email, contraseña, saldo, id))
+        mysql.connection.commit()
+        flash("Usuario actualizado")
+        return redirect(url_for('admin_usuarios'))
+
+# ==========================================
+# ADMINISTRACIÓN DE PARTIDOS 
+# ==========================================
 
 @app.route('/admin/partidos')
 def admin_partidos():
@@ -264,9 +301,66 @@ def admin_partidos():
     cur.execute("SELECT id, categoria, liga, local, visitante, tiempo, cuota_1, cuota_x, cuota_2 FROM partidos")
     columnas = [desc[0] for desc in cur.description]
     partidos = [dict(zip(columnas, row)) for row in cur.fetchall()]
-    cur.close()
     return render_template('partidos.html', partidos=partidos)
 
+@app.route('/admin/crear_partido', methods=['POST'])
+def admin_crear_partido():
+    if request.method == 'POST':
+        id = request.form['id']
+        categoria = request.form['categoria']
+        liga = request.form['liga']
+        local = request.form['local']
+        img_local = request.form['img_local']
+        visitante = request.form['visitante']
+        img_visitante = request.form['img_visitante']
+        tiempo = request.form['tiempo']
+        cuota_1 = request.form['cuota_1']
+        cuota_x = request.form['cuota_x']
+        cuota_2 = request.form['cuota_2']
+
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            INSERT INTO partidos (id, categoria, liga, local, img_local, visitante, img_visitante, tiempo, cuota_1, cuota_x, cuota_2)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (id, categoria, liga, local, img_local, visitante, img_visitante, tiempo, cuota_1, cuota_x, cuota_2))
+        mysql.connection.commit()
+        flash("Partido creado")
+        return redirect(url_for('admin_partidos'))
+
+
+@app.route('/eliminar_partido/<string:id>')
+def eliminar_partido(id):
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM detalles_apuesta WHERE id_partido = %s", (id,))
+    cur.execute("DELETE FROM partidos WHERE id = %s", (id,))
+    mysql.connection.commit()
+    flash("Partido eliminado")
+    return redirect(url_for('admin_partidos'))
+
+@app.route('/editar_partido/<string:id>', methods=['POST'])
+def editar_partido(id):
+    if request.method == 'POST':
+        categoria = request.form['categoria']
+        liga = request.form['liga']
+        local = request.form['local']
+        visitante = request.form['visitante']
+        tiempo = request.form['tiempo']
+        cuota_1 = request.form['cuota_1']
+        cuota_x = request.form['cuota_x']
+        cuota_2 = request.form['cuota_2']
+
+        print(f"Editando partido {id}: {local} vs {visitante}") 
+
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            UPDATE partidos
+            SET categoria=%s, liga=%s, local=%s, visitante=%s, tiempo=%s, cuota_1=%s, cuota_x=%s, cuota_2=%s
+            WHERE id=%s
+        """, (categoria, liga, local, visitante, tiempo, cuota_1, cuota_x, cuota_2, id))
+        
+        mysql.connection.commit()
+        flash("Partido actualizado correctamente")
+        return redirect(url_for('admin_partidos'))
 
 if __name__ == '__main__':
     app.run(port=3000, debug=True)

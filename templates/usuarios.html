@@ -4,86 +4,106 @@
     <meta charset="UTF-8">
     <title>Admin - Usuarios</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-        .container {
-            width: 90%;
-            margin: 30px auto;
-            background-color: #262626;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #444;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            color: white;
-        }
-        h2 {
-            color: var(--accent);
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 10px;
-            border: 1px solid #444;
-            text-align: center;
-        }
-        th {
-            background-color: var(--accent);
-            color: black;
-        }
-        tr:nth-child(even) {
-            background-color: #333;
-        }
-        .btn-back {
-            display: inline-block;
-            margin-bottom: 20px;
-            padding: 10px 20px;
-            background: var(--accent);
-            color: black;
-            text-decoration: none;
-            font-weight: bold;
-            border-radius: 5px;
-            transition: 0.3s;
-        }
-        .btn-back:hover {
-            background: #ffca2c;
-        }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Listado de Usuarios</h2>
-        <!-- Botón de regresar -->
-        <a href="{{ url_for('admin') }}" class="btn-back">← Volver al Panel</a>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Apellido</th>
-                    <th>Email</th>
-                    <th>Contraseña</th>
-                    <th>Fecha Registro</th>
-                    <th>Saldo</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for u in usuarios %}
-                <tr>
-                    <td>{{ u.id_usuario }}</td>
-                    <td>{{ u.nombre }}</td>
-                    <td>{{ u.apellido }}</td>
-                    <td>{{ u.email }}</td>
-                    <td>{{ u.contraseña }}</td>
-                    <td>{{ u.fecha_registro }}</td>
-                    <td>{{ u.saldo }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<div class="admin-container">
+    <h2 class="admin-title">GESTIÓN DE USUARIOS</h2>
+    
+    <div class="top-actions">
+        <a href="/admin" class="btn-back">← Volver</a>
+        <button class="btn-add" onclick="document.getElementById('modalCrear').style.display='flex'">+ Nuevo Usuario</button>
     </div>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %} <div class="msg-success">{{ messages[0] }}</div> {% endif %}
+    {% endwith %}
+
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th style="width: 50px;">ID</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Email</th>
+                <th>Contraseña</th>
+                <th>Saldo</th>
+                <th style="width: 120px;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in usuarios %}
+            <tr>
+                <td>{{ u.id_usuario }}</td>
+                <td>{{ u.nombre }}</td>
+                <td>{{ u.apellido }}</td>
+                <td>{{ u.email }}</td>
+                <td>{{ u.contraseña }}</td>
+                <td style="font-weight:bold; color:var(--accent);">$ {{ "%.2f"|format(u.saldo) }}</td>
+                <td>
+                    <div class="action-container">
+                        <button class="btn-icon btn-edit" onclick="abrirEditar('{{u.id_usuario}}', '{{u.nombre}}', '{{u.apellido}}', '{{u.email}}', '{{u.contraseña}}', '{{u.saldo}}')">✏️</button>
+                        <a href="/eliminar_usuario/{{ u.id_usuario }}" class="btn-icon btn-delete-user" onclick="return confirm('¿Borrar este usuario permanentemente?')">🗑️</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div id="modalCrear" class="modal-overlay">
+    <div class="modal-box">
+        <span class="close-btn" onclick="document.getElementById('modalCrear').style.display='none'">×</span>
+        <h3 style="color: #28a745; text-align: center;">Nuevo Usuario</h3>
+        <form action="/admin/crear_usuario" method="POST">
+            <div class="form-grid">
+                <div class="form-group"><label>Nombre</label><input type="text" name="nombre" required></div>
+                <div class="form-group"><label>Apellido</label><input type="text" name="apellido" required></div>
+                <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
+                <div class="form-group"><label>Contraseña</label><input type="text" name="contraseña" required></div>
+                <div class="form-group"><label>Saldo Inicial ($)</label><input type="number" name="saldo" step="0.01" required></div>
+            </div>
+            <button type="submit" class="btn-save" style="background:#28a745; color:white; margin-top:20px;">CREAR USUARIO</button>
+        </form>
+    </div>
+</div>
+
+<div id="modalEditar" class="modal-overlay">
+    <div class="modal-box">
+        <span class="close-btn" onclick="document.getElementById('modalEditar').style.display='none'">×</span>
+        <h3 style="color: var(--accent); text-align: center;">Editar Usuario</h3>
+        <form id="formEditar" action="" method="POST">
+            <div class="form-grid">
+                <div class="form-group"><label>Nombre</label><input type="text" name="nombre" id="edit_nombre" required></div>
+                <div class="form-group"><label>Apellido</label><input type="text" name="apellido" id="edit_apellido" required></div>
+                <div class="form-group"><label>Email</label><input type="email" name="email" id="edit_email" required></div>
+                <div class="form-group"><label>Contraseña</label><input type="text" name="contraseña" id="edit_contraseña" required></div>
+                <div class="form-group"><label>Saldo ($)</label><input type="number" name="saldo" id="edit_saldo" step="0.01" required></div>
+            </div>
+            <button type="submit" class="btn-save" style="margin-top:20px;">GUARDAR CAMBIOS</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function abrirEditar(id, nombre, apellido, email, password, saldo) {
+        document.getElementById('modalEditar').style.display = 'flex';
+        document.getElementById('edit_nombre').value = nombre;
+        document.getElementById('edit_apellido').value = apellido;
+        document.getElementById('edit_email').value = email;
+        document.getElementById('edit_contraseña').value = password;
+        document.getElementById('edit_saldo').value = saldo;
+        document.getElementById('formEditar').action = "/editar_usuario/" + id;
+    }
+    
+    // Cerrar al hacer clic fuera
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal-overlay')) {
+            event.target.style.display = 'none';
+        }
+    }
+</script>
+
 </body>
 </html>

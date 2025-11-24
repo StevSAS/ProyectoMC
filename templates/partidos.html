@@ -5,89 +5,172 @@
     <title>Admin - Partidos</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
-        .container {
-            width: 90%;
-            margin: 30px auto;
-            background-color: #262626;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #444;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            color: white;
-        }
-        h2 {
-            color: var(--accent);
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 10px;
-            border: 1px solid #444;
-            text-align: center;
-        }
-        th {
-            background-color: var(--accent);
-            color: black;
-        }
-        tr:nth-child(even) {
-            background-color: #333;
-        }
-        .btn-back {
-            display: inline-block;
-            margin-bottom: 20px;
-            padding: 10px 20px;
-            background: var(--accent);
-            color: black;
-            text-decoration: none;
-            font-weight: bold;
-            border-radius: 5px;
-            transition: 0.3s;
-        }
-        .btn-back:hover {
-            background: #ffca2c;
-        }
+        /* Estilos específicos para la tabla de admin */
+        .container { width: 98%; margin: 30px auto; background-color: #262626; padding: 20px; border-radius: 8px; border: 1px solid #444; overflow-x: auto; }
+        h2 { color: var(--accent); text-align: center; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;}
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 10px; border: 1px solid #444; text-align: center; font-size: 13px; vertical-align: middle; }
+        th { background-color: var(--accent); color: black; font-weight: bold; }
+        tr:nth-child(even) { background-color: #333; }
+        tr:hover { background-color: #3a3a3a; }
+        
+        /* Botones */
+        .top-actions { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .btn-back { background: var(--accent); color: black; padding: 10px 20px; font-weight: bold; border-radius: 5px; text-decoration: none; }
+        .btn-add { background: #28a745; color: white; padding: 10px 20px; font-weight: bold; border-radius: 5px; border: none; cursor: pointer; }
+        
+        .action-container { display: flex; justify-content: center; gap: 5px; }
+        .btn-table { width: 30px; height: 30px; border-radius: 4px; border: none; cursor: pointer; text-decoration: none; font-size: 14px; display: inline-flex; justify-content: center; align-items: center; }
+        .btn-edit { background-color: #007bff; color: white; }
+        .btn-delete-match { background-color: #dc3545; color: white; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; }
+        .modal-box { background: #1e1e1e; padding: 30px; width: 600px; border-radius: 10px; border: 2px solid var(--accent); position: relative; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left;}
+        .form-group label { display: block; color: #aaa; margin-bottom: 5px; font-size: 12px; }
+        .form-group input { width: 100%; padding: 8px; background: #121212; border: 1px solid #444; color: white; border-radius: 4px; box-sizing: border-box; }
+        .btn-save { width: 100%; padding: 12px; background: var(--accent); color: black; border: none; font-weight: bold; cursor: pointer; margin-top: 20px; border-radius: 4px; }
+        .close-modal { position: absolute; top: 10px; right: 15px; color: #aaa; cursor: pointer; font-size: 24px; }
+        .alert { padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; background: #d4edda; color: #155724; font-weight:bold;}
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Listado de Partidos</h2>
-        <!-- Botón de regresar -->
-        <a href="{{ url_for('admin') }}" class="btn-back">← Volver al Panel</a>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Categoría</th>
-                    <th>Liga</th>
-                    <th>Local</th>
-                    <th>Visitante</th>
-                    <th>Tiempo</th>
-                    <th>Cuota 1</th>
-                    <th>Cuota X</th>
-                    <th>Cuota 2</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for p in partidos %}
-                <tr>
-                    <td>{{ p.id }}</td>
-                    <td>{{ p.categoria }}</td>
-                    <td>{{ p.liga }}</td>
-                    <td>{{ p.local }}</td>
-                    <td>{{ p.visitante }}</td>
-                    <td>{{ p.tiempo }}</td>
-                    <td>{{ p.cuota_1 }}</td>
-                    <td>{{ p.cuota_x }}</td>
-                    <td>{{ p.cuota_2 }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<div class="container">
+    <h2>GESTIÓN DE PARTIDOS</h2>
+    
+    <div class="top-actions">
+        <a href="/admin" class="btn-back">← Volver</a>
+        <button class="btn-add" onclick="document.getElementById('modalCrear').style.display='flex'">+ Nuevo Partido</button>
     </div>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %} <div class="alert">{{ messages[0] }}</div> {% endif %}
+    {% endwith %}
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Cat.</th>
+                <th>Liga</th>
+                <th>Local</th>
+                <th>Visitante</th>
+                <th>Tiempo</th>
+                <th>1</th>
+                <th>X</th>
+                <th>2</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in partidos %}
+            <tr id="fila-{{ p.id }}">
+                <td class="data-id">{{ p.id }}</td>
+                <td class="data-cat">{{ p.categoria }}</td>
+                <td class="data-liga">{{ p.liga }}</td>
+                <td class="data-local" style="color:var(--accent);">{{ p.local }}</td>
+                <td class="data-visita" style="color:var(--accent);">{{ p.visitante }}</td>
+                <td class="data-tiempo">{{ p.tiempo }}</td>
+                <td class="data-c1">{{ p.cuota_1 }}</td>
+                <td class="data-cx">{{ p.cuota_x }}</td>
+                <td class="data-c2">{{ p.cuota_2 }}</td>
+                <td>
+                    <div class="action-container">
+                        <button class="btn-table btn-edit" onclick="cargarEditar('{{ p.id }}')">✏️</button>
+                        
+                        <a href="/eliminar_partido/{{ p.id }}" class="btn-table btn-delete-match" onclick="return confirm('¿Borrar?')">🗑️</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div id="modalCrear" class="modal-overlay">
+    <div class="modal-box">
+        <span class="close-modal" onclick="document.getElementById('modalCrear').style.display='none'">×</span>
+        <h3 style="color: #28a745; text-align: center;">Crear Partido</h3>
+        <form action="/admin/crear_partido" method="POST">
+            <div class="form-grid">
+                <div class="form-group"><label>ID Único</label><input type="number" name="id" required></div>
+                <div class="form-group"><label>Categoría</label><input type="text" name="categoria" required></div>
+                <div class="form-group"><label>Liga</label><input type="text" name="liga" required></div>
+                <div class="form-group"><label>Tiempo</label><input type="text" name="tiempo" required></div>
+                <div class="form-group"><label>Local</label><input type="text" name="local" required></div>
+                <div class="form-group"><label>Img Local</label><input type="text" name="img_local" value="default" required></div>
+                <div class="form-group"><label>Visitante</label><input type="text" name="visitante" required></div>
+                <div class="form-group"><label>Img Visitante</label><input type="text" name="img_visitante" value="default" required></div>
+                <div class="form-group"><label>Cuota 1</label><input type="number" step="0.01" name="cuota_1" required></div>
+                <div class="form-group"><label>Cuota X</label><input type="text" name="cuota_x" required></div>
+                <div class="form-group"><label>Cuota 2</label><input type="number" step="0.01" name="cuota_2" required></div>
+            </div>
+            <button type="submit" class="btn-save" style="background:#28a745; color:white;">AGREGAR</button>
+        </form>
+    </div>
+</div>
+
+<div id="modalEditar" class="modal-overlay">
+    <div class="modal-box">
+        <span class="close-modal" onclick="document.getElementById('modalEditar').style.display='none'">×</span>
+        <h3 style="color: var(--accent); text-align: center;">Editar Partido</h3>
+        <form id="formEditar" action="" method="POST">
+            <div class="form-grid">
+                <div class="form-group"><label>Categoría</label><input type="text" name="categoria" id="edit_categoria" required></div>
+                <div class="form-group"><label>Liga</label><input type="text" name="liga" id="edit_liga" required></div>
+                <div class="form-group"><label>Local</label><input type="text" name="local" id="edit_local" required></div>
+                <div class="form-group"><label>Visitante</label><input type="text" name="visitante" id="edit_visitante" required></div>
+                <div class="form-group" style="grid-column: span 2;"><label>Tiempo</label><input type="text" name="tiempo" id="edit_tiempo" required></div>
+                <div class="form-group"><label>Cuota 1</label><input type="number" step="0.01" name="cuota_1" id="edit_c1" required></div>
+                <div class="form-group"><label>Cuota X</label><input type="text" name="cuota_x" id="edit_cx" required></div>
+                <div class="form-group"><label>Cuota 2</label><input type="number" step="0.01" name="cuota_2" id="edit_c2" required></div>
+            </div>
+            <button type="submit" class="btn-save">GUARDAR CAMBIOS</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function cargarEditar(id) {
+        // Encontrar la fila exacta del partido
+        let fila = document.getElementById('fila-' + id);
+        
+        //  Leer los datos que ya están escritos en la tabla
+        let cat = fila.querySelector('.data-cat').innerText;
+        let liga = fila.querySelector('.data-liga').innerText;
+        let local = fila.querySelector('.data-local').innerText;
+        let visita = fila.querySelector('.data-visita').innerText;
+        let tiempo = fila.querySelector('.data-tiempo').innerText;
+        let c1 = fila.querySelector('.data-c1').innerText;
+        let cx = fila.querySelector('.data-cx').innerText;
+        let c2 = fila.querySelector('.data-c2').innerText;
+
+        //Poner esos datos dentro del formulario del modal
+        document.getElementById('edit_categoria').value = cat;
+        document.getElementById('edit_liga').value = liga;
+        document.getElementById('edit_local').value = local;
+        document.getElementById('edit_visitante').value = visita;
+        document.getElementById('edit_tiempo').value = tiempo;
+        document.getElementById('edit_c1').value = c1;
+        document.getElementById('edit_cx').value = cx;
+        document.getElementById('edit_c2').value = c2;
+        
+        //Configurar el formulario para que edite el ID correcto
+        document.getElementById('formEditar').action = "/editar_partido/" + id;
+        
+        //Mostrar el modal
+        document.getElementById('modalEditar').style.display = 'flex';
+    }
+    
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal-overlay')) {
+            event.target.style.display = 'none';
+        }
+    }
+</script>
+
 </body>
 </html>

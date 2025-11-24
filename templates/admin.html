@@ -4,70 +4,8 @@
     <meta charset="UTF-8">
     <title>Administrador - BetUTM 71</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-        body {
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .admin-box {
-            background-color: var(--bg-panel);
-            padding: 50px;
-            border-radius: 12px;
-            text-align: center;
-            border: 2px solid var(--accent);
-            box-shadow: 0 0 20px rgba(255,193,7,0.4);
-        }
-        .admin-box h1 {
-            color: var(--accent);
-            margin-bottom: 20px;
-        }
-        .admin-box p {
-            font-size: 18px;
-            color: #ccc;
-            margin-bottom: 30px;
-        }
-        .admin-btn {
-            display: inline-block;
-            width: 180px;
-            margin: 10px;
-            padding: 15px 0;
-            border-radius: 8px;
-            background: var(--accent);
-            color: black;
-            font-weight: bold;
-            font-size: 16px;
-            text-decoration: none;
-            transition: 0.3s;
-        }
-        .admin-btn:hover {
-            background: #ffca2c;
-            transform: translateY(-2px);
-        }
-        .btn-volver {
-            display: block;
-            margin: 30px auto 0;
-            padding: 10px 20px;
-            border-radius: 6px;
-            border: none;
-            background: #333;
-            color: #ccc;
-            font-weight: bold;
-            cursor: pointer;
-            text-decoration: none;
-        }
-        .btn-volver:hover {
-            background: #444;
-            color: var(--accent);
-        }
-    </style>
 </head>
-<body>
+<body class="admin-body">
 
     <div class="admin-box">
         <h1>Bienvenido a modificar</h1>
@@ -76,7 +14,7 @@
         <a href="/admin/usuarios" class="admin-btn">Usuarios</a>
         <a href="/admin/partidos" class="admin-btn">Partidos</a>
 
-        <a href="/" class="btn-volver">Volver al inicio</a>
+        <a href="/" class="btn-volver-admin">Volver al inicio</a>
     </div>
 
 </body>

@@ -9,24 +9,24 @@
 
     <header class="top-bar">
         <div class="logo-area">
-    <span style="color: #ffffff;">BET</span><span style="color: #ffc107;">UTM 71</span>
-</div>
+            <span class="text-white">BET</span><span class="text-gold">UTM 71</span>
+        </div>
         <div class="user-area">
-            <a href="/panel" class="btn-header logout" style="background: #444; color: white;">⬅ Volver a Apostar</a>
+            <a href="/panel" class="btn-header logout btn-back-dark">⬅ Volver a Apostar</a>
         </div>
     </header>
 
     <div class="payment-wrapper">
         <div class="payment-card">
-            <h2 style="color: var(--accent); text-align: center; margin-bottom: 20px;">RECAGAR SALDO</h2>
+            <h2 class="payment-title">RECARGAR SALDO</h2>
             
-            <p style="color: #aaa; text-align: center; font-size: 14px; margin-bottom: 30px;">
+            <p class="payment-desc">
                 Elige tu método de pago y el monto a ingresar.
             </p>
 
             <form action="/guardar_recarga" method="POST">
                 
-                <label style="color: white; font-weight: bold;">1. Selecciona Método</label>
+                <label class="payment-label">1. Selecciona Método</label>
                 <div class="methods-grid">
                     <label class="method-item">
                         <input type="radio" name="metodo" value="Visa/Mastercard" required>
@@ -42,15 +42,15 @@
                     </label>
                 </div>
 
-                <label style="color: white; font-weight: bold; margin-top: 20px; display: block;">2. Monto a Recargar ($)</label>
+                <label class="payment-label mt-20">2. Monto a Recargar ($)</label>
                 <input type="number" name="monto" placeholder="Ej: 50.00" min="5" step="0.01" required class="input-dark">
 
-                <button type="submit" class="btn-pagar" style="margin-top: 20px; font-size: 18px;">
+                <button type="submit" class="btn-pagar btn-confirm">
                     CONFIRMAR RECARGA
                 </button>
             </form>
 
-            <p style="font-size: 12px; color: #666; text-align: center; margin-top: 20px;">
+            <p class="payment-footer">
                 Transacción segura y encriptada. El saldo se reflejará inmediatamente.
             </p>
         </div>

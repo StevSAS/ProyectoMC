@@ -2,46 +2,50 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Panel de Apuestas</title>
+    <title>BETUTM 71 - Casa de Apuestas</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
     <header class="top-bar">
         <div class="logo-area">
-            <span style="color:white;">BET</span><span style="color:var(--accent);">UTM</span> 71
+            <span style="color: #ffffff;">BET</span><span style="color: #ffc107;">UTM 71</span>
         </div>
         
         <div class="user-area">
-            
             <div class="user-info-group">
-                <div class="user-name">Hola, {{ nombre }}</div>
+                <div class="user-name">HOLA, {{ nombre }}</div>
                 <div class="user-balance">$ {{ "%.2f"|format(saldo) }}</div>
             </div>
 
             <div class="actions-group">
+                {% if session.get('rol') == 'admin' %}
+                <a href="/admin" class="btn-action" style="background: #444; color: #ffc107; border: 1px solid #ffc107; margin-right: 10px;" title="Panel Admin">
+                    <span class="icon">⚙️</span> Admin
+                </a>
+                {% endif %}
+
                 <a href="/recargar" class="btn-action btn-deposit" title="Depositar">
                     <span class="icon">💰</span> Depositar
                 </a>
-                
                 <a href="/mis_apuestas" class="btn-action btn-history" title="Mis Apuestas">
                     <span class="icon">📄</span> Historial
                 </a>
-                
                 <a href="/logout" class="btn-action btn-logout" title="Salir">
-                    <span class=</span> Cerrar Sesion
+                    <span class="icon"></span> Cerrar Sesion
                 </a>
             </div>
-
         </div>
     </header>
-    
 
     <div class="main-layout">
+        
         <aside class="sidebar">
             <div class="menu-item active" onclick="filtrar('todos', this)">🏠 Todos</div>
             <div class="menu-item" onclick="filtrar('futbol', this)">⚽ Fútbol</div>
             <div class="menu-item" onclick="filtrar('basket', this)">🏀 Basket</div>
+            <div class="menu-item" onclick="filtrar('tenis', this)">🎾 Tenis</div>
+            <div class="menu-item" onclick="filtrar('ufc', this)">🥊 UFC</div>
         </aside>
 
         <main class="content">
@@ -71,9 +75,13 @@
                     <div id="btn_{{p.id}}_1" class="odd-btn" onclick="toggleApuesta('{{p.id}}', '{{p.local}} vs {{p.visitante}}', '{{p.local}}', '{{c1}}', '1')">
                         <span class="odd-desc">1</span><span class="odd-val">{{ c1 }}</span>
                     </div>
+                    
+                    {% if cX != 'None' and cX != '' and cX != '-' %}
                     <div id="btn_{{p.id}}_X" class="odd-btn" onclick="toggleApuesta('{{p.id}}', '{{p.local}} vs {{p.visitante}}', 'Empate', '{{cX}}', 'X')">
                         <span class="odd-desc">X</span><span class="odd-val">{{ cX }}</span>
                     </div>
+                    {% endif %}
+
                     <div id="btn_{{p.id}}_2" class="odd-btn" onclick="toggleApuesta('{{p.id}}', '{{p.local}} vs {{p.visitante}}', '{{p.visitante}}', '{{c2}}', '2')">
                         <span class="odd-desc">2</span><span class="odd-val">{{ c2 }}</span>
                     </div>
@@ -83,20 +91,20 @@
         </main>
 
         <aside class="ticket-panel">
-            <div class="ticket-header">Cupón</div>
+            <div class="ticket-header">Cupón de Apuesta</div>
             <div id="lista-apuestas"><p style="text-align:center; color:#666; margin-top:20px;">Vacío</p></div>
             
             <form action="/procesar_apuesta" method="POST" id="form-final" style="display:none;">
                 <div class="payment-zone">
                     <div style="display:flex; justify-content:space-between; color:var(--accent); font-weight:bold;">
-                        <span>Cuota:</span><span id="total-cuota">1.00</span>
+                        <span>Cuota Total:</span><span id="total-cuota">1.00</span>
                     </div>
                     <input type="hidden" name="datos_apuestas" id="input-json">
-                    <label style="font-size:12px; color:#888; margin-top:10px; display:block;">Apostar ($)</label>
-                    <input type="number" name="monto_apuesta" id="monto" value="10" oninput="calcularGanancia()">
+                    <label style="font-size:12px; color:#888; margin-top:10px; display:block;">Monto a Apostar ($)</label>
+                    <input type="number" name="monto_apuesta" id="monto" value="10" min="1" step="0.01" oninput="calcularGanancia()">
                     <div style="text-align:center; margin-bottom:10px;">Ganancia: <span id="ganancia" style="color:var(--accent); font-weight:bold;">$0.00</span></div>
                     
-                    <button type="submit" class="btn-pagar">APOSTAR</button>
+                    <button type="submit" class="btn-pagar">REALIZAR APUESTA</button>
                 </div>
             </form>
         </aside>
