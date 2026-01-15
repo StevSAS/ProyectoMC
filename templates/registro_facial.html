@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro Facial - BETUTM</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body style="background-color: #1c1c1c; color: white; text-align: center; font-family: Arial, sans-serif;">
+
+    <h1>Registro de Rostro</h1>
+    <p>Ubica tu rostro dentro de la silueta para vincularlo a tu cuenta</p>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alerta">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="marco-camara registro">
+        <img src="{{ url_for('video_feed') }}" class="video-feed" alt="Cámara">
+        
+        <div class="silueta-overlay"></div>
+    </div>
+
+    <br>
+
+    <form action="/guardar_rostro_db" method="POST">
+        <button type="submit" class="btn-guardar">📸 CAPTURAR Y GUARDAR</button>
+    </form>
+    
+    <br>
+    <a href="/panel" style="color: #ffc107; text-decoration: none;">Volver al Panel</a>
+</body>
+</html>

@@ -1,6 +1,11 @@
 import json
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+import threading
+from flask import Flask, render_template, request, redirect, url_for, flash, session, Response
 from flask_mysqldb import MySQL
+import cv2
+import face_recognition
+import pickle
+import numpy as np
 
 app = Flask(__name__)
 
@@ -14,18 +19,39 @@ mysql = MySQL(app)
 app.secret_key = "mysecretkey"
 
 # ==========================================
-# RUTAS DE ACCESO
+#  VARIABLES GLOBALES Y CÁMARA
 # ==========================================
+global_frame = None
+lock = threading.Lock()
 
+def generar_frames():
+    global global_frame
+    camera = cv2.VideoCapture(0)
+    while True:
+        success, frame = camera.read()
+        if not success: break
+        else:
+            with lock:
+                global_frame = frame.copy()
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame_bytes = buffer.tobytes()
+            yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+    camera.release()
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(generar_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+# ==========================================
+#  RUTAS PRINCIPALES
+# ==========================================
 @app.route('/')
 def Index():
-    if 'id_usuario' in session:
-        return redirect(url_for('panel'))
+    if 'id_usuario' in session: return redirect(url_for('panel'))
     return render_template('principal.html')
 
 @app.route('/registrarse')
-def registrarse():
-    return render_template('registro.html')
+def registrarse(): return render_template('registro.html')
 
 @app.route('/agregar_usuario', methods=['POST'])
 def add_contact():
@@ -34,12 +60,8 @@ def add_contact():
         apellido = request.form['apellido']
         email = request.form['email']
         contraseña = request.form['contraseña']
-
         cur = mysql.connection.cursor()
-        cur.execute("""
-            INSERT INTO usuarios (nombre, apellido, email, contraseña, saldo, fecha_registro) 
-            VALUES (%s, %s, %s, %s, 0, NOW())
-        """, (nombre, apellido, email, contraseña))
+        cur.execute("INSERT INTO usuarios (nombre, apellido, email, contraseña, saldo, fecha_registro) VALUES (%s, %s, %s, %s, 0, NOW())", (nombre, apellido, email, contraseña))
         mysql.connection.commit()
         flash("Usuario registrado correctamente")
         return redirect(url_for('Index'))
@@ -49,11 +71,9 @@ def login():
     if request.method == 'POST':
         email = request.form['email']
         contraseña = request.form['contraseña']
-
         cur = mysql.connection.cursor()
         cur.execute("SELECT id_usuario, nombre, saldo, rol FROM usuarios WHERE email=%s AND contraseña=%s", (email, contraseña))
         user = cur.fetchone()
-
         if user:
             session['id_usuario'] = user[0]
             session['nombre'] = user[1]
@@ -69,181 +89,252 @@ def logout():
     session.clear()
     return redirect(url_for('Index'))
 
-# ==========================================
-# PANEL PRINCIPAL
-# ==========================================
-
+# --- 🚀 FUNCIÓN PANEL ACTUALIZADA 🚀 ---
 @app.route('/panel')
 def panel():
-    if 'id_usuario' not in session:
-        return redirect(url_for('Index'))
-
+    if 'id_usuario' not in session: return redirect(url_for('Index'))
+    
     id_usuario = session['id_usuario']
+    nombre_usuario = session['nombre'] # Necesario para buscar el rostro
+    
     cur = mysql.connection.cursor()
-
-    # 1. Saldo Actualizado
+    
+    # 1. Actualizar Saldo
     cur.execute("SELECT saldo FROM usuarios WHERE id_usuario=%s", (id_usuario,))
     res = cur.fetchone()
-    if res:
-        session['saldo'] = float(res[0])
-
-    # 2. Partidos desde la Base de Datos
+    if res: session['saldo'] = float(res[0])
+    
+    # 2. Cargar Partidos
     cur.execute("SELECT * FROM partidos")
     columnas = [d[0] for d in cur.description]
     partidos_db = [dict(zip(columnas, row)) for row in cur.fetchall()]
-
-    # 3. Formato de cuotas
     lista_final = []
     for p in partidos_db:
-        p['cuotas'] = {
-            '1': p['cuota_1'],
-            'X': p['cuota_x'],
-            '2': p['cuota_2']
-        }
+        p['cuotas'] = {'1': p['cuota_1'], 'X': p['cuota_x'], '2': p['cuota_2']}
         lista_final.append(p)
 
+    # 3. VERIFICAR SI YA TIENE ROSTRO (NUEVO)
+    # Buscamos en la tabla de caras si existe el nombre de este usuario
+    cur.execute("SELECT nombre_usuario FROM datos_biometricos WHERE nombre_usuario = %s", (nombre_usuario,))
+    datos_rostro = cur.fetchone()
+    
+    # Si encuentra datos, es True (tiene cara). Si no, es False.
+    tiene_rostro = True if datos_rostro else False
+
+    # 4. Enviamos la variable 'tiene_rostro' al HTML
     return render_template("panel.html", 
-                partidos=lista_final, 
-                saldo=session['saldo'], 
-                nombre=session['nombre'])
+                           partidos=lista_final, 
+                           saldo=session['saldo'], 
+                           nombre=session['nombre'],
+                           tiene_rostro=tiene_rostro)
 
 # ==========================================
-# RECARGAS
+#  SISTEMA BIOMÉTRICO (CON SEGURIDAD ANTI-DUPLICADOS)
 # ==========================================
 
+@app.route('/vista_registro_facial')
+def vista_registro_facial():
+    if 'id_usuario' not in session: return redirect(url_for('login')) 
+    return render_template('registro_facial.html')
+
+@app.route('/vista_login_facial')
+def vista_login_facial():
+    return render_template('login_facial.html')
+
+@app.route('/guardar_rostro_db', methods=['POST'])
+def guardar_rostro_db():
+    global global_frame
+    if 'nombre' not in session:
+        flash("⚠️ Inicia sesión primero.")
+        return redirect(url_for('Index'))
+
+    frame_local = None
+    with lock:
+        if global_frame is not None:
+            frame_local = global_frame.copy()
+            
+    if frame_local is None:
+        flash("❌ Cámara no lista.")
+        return redirect(url_for('vista_registro_facial'))
+    
+    try:
+        # CONVERSIÓN DE IMAGEN 
+        rgb_frame = frame_local[:, :, ::-1]
+        
+        # Detección
+        face_locations = face_recognition.face_locations(rgb_frame)
+        encodings = face_recognition.face_encodings(rgb_frame, face_locations)
+        
+        if not encodings:
+            flash("❌ No veo tu cara. Ubícate bien en la silueta.")
+            return redirect(url_for('vista_registro_facial'))
+        
+        # Datos del usuario actual
+        encoding_nuevo = encodings[0]
+        nombre_actual = session['nombre']
+        
+        cur = mysql.connection.cursor()
+        
+        # --- 🛡️ INICIO BLOQUE DE SEGURIDAD 🛡️ ---
+        # Buscamos TODOS los rostros ya guardados
+        cur.execute("SELECT nombre_usuario, encoding FROM datos_biometricos")
+        todos_los_usuarios = cur.fetchall()
+        
+        for nombre_db, blob_db in todos_los_usuarios:
+            # Si el rostro es de OTRO usuario (no soy yo mismo actualizando)
+            if nombre_db != nombre_actual and blob_db is not None:
+                encoding_guardado = pickle.loads(blob_db)
+                # Comparamos si la cara nueva ya existe en la BD
+                coincidencia = face_recognition.compare_faces([encoding_guardado], encoding_nuevo, tolerance=0.5)[0]
+                
+                if coincidencia:
+                    flash("ESTE ROSTRO YA ESTA REGISTRADO EN OTRA CUENTA !")
+                    return redirect(url_for('panel'))
+        # --- 🛡️ FIN BLOQUE DE SEGURIDAD 🛡️ ---
+
+        # Si llegamos aquí, la cara es única. Procedemos a guardar.
+        blob_guardar = pickle.dumps(encoding_nuevo)
+        
+        cur.execute("DELETE FROM datos_biometricos WHERE nombre_usuario = %s", (nombre_actual,))
+        cur.execute("INSERT INTO datos_biometricos (nombre_usuario, encoding) VALUES (%s, %s)", (nombre_actual, blob_guardar))
+        mysql.connection.commit()
+        
+        flash(f"✅ ¡Rostro de {nombre_actual} registrado correctamente!")
+        return redirect(url_for('panel'))
+            
+    except Exception as e:
+        print(f"ERROR: {e}")
+        flash("❌ Error técnico.")
+        return redirect(url_for('panel'))
+
+@app.route('/verificar_rostro_db', methods=['POST'])
+def verificar_rostro_db():
+    global global_frame
+    frame_local = None
+    with lock:
+        if global_frame is not None:
+            frame_local = global_frame.copy()
+    
+    if frame_local is None:
+        flash("⏳ Cargando cámara...")
+        return redirect(url_for('vista_login_facial'))
+
+    try:
+        # Conversión Rápida
+        rgb_frame = frame_local[:, :, ::-1]
+        
+        face_locations = face_recognition.face_locations(rgb_frame)
+        encodings = face_recognition.face_encodings(rgb_frame, face_locations)
+        
+        if not encodings:
+            flash("❌ No detecto rostro.")
+            return redirect(url_for('vista_login_facial'))
+        
+        encoding_actual = encodings[0]
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT nombre_usuario, encoding FROM datos_biometricos")
+        data = cur.fetchall()
+        
+        usuario_encontrado = None
+        for nombre, blob in data:
+            if blob:
+                encoding_guardado = pickle.loads(blob)
+                if face_recognition.compare_faces([encoding_guardado], encoding_actual, tolerance=0.5)[0]:
+                    usuario_encontrado = nombre
+                    break
+        
+        if usuario_encontrado:
+            cur.execute("SELECT id_usuario, nombre, saldo, rol FROM usuarios WHERE nombre = %s", (usuario_encontrado,))
+            user = cur.fetchone()
+            if user:
+                session['id_usuario'] = user[0]
+                session['nombre'] = user[1]
+                session['saldo'] = float(user[2])
+                session['rol'] = user[3]
+                session['conectado'] = True
+                flash(f"✅ Bienvenido {usuario_encontrado}")
+                return redirect(url_for('panel'))
+        
+        flash("⛔ Rostro no reconocido.")
+        return redirect(url_for('vista_login_facial'))
+
+    except Exception as e:
+        print(f"ERROR: {e}")
+        flash("❌ Error técnico.")
+        return redirect(url_for('vista_login_facial'))
+
+# ==========================================
+#  OTRAS RUTAS
+# ==========================================
 @app.route('/recargar')
 def recargar():
-    if 'id_usuario' not in session:
-        return redirect(url_for('login'))
+    if 'id_usuario' not in session: return redirect(url_for('login'))
     return render_template('recargar.html')
 
 @app.route('/guardar_recarga', methods=['POST'])
 def guardar_recarga():
-    if 'id_usuario' not in session:
-        return redirect(url_for('login'))
-
+    if 'id_usuario' not in session: return redirect(url_for('login'))
     id_usuario = session['id_usuario']
     monto = float(request.form['monto'])
     metodo = request.form['metodo']
-
     cur = mysql.connection.cursor()
     cur.execute("INSERT INTO recarga (id_usuario, monto, metodo, fecha) VALUES (%s, %s, %s, NOW())", (id_usuario, monto, metodo))
     cur.execute("UPDATE usuarios SET saldo = saldo + %s WHERE id_usuario = %s", (monto, id_usuario))
     mysql.connection.commit()
-
     session['saldo'] += monto
     flash(f"Recarga de ${monto} realizada con éxito")
     return redirect(url_for('panel'))
 
-# ==========================================
-# PROCESAR APUESTA
-# ==========================================
-
 @app.route('/procesar_apuesta', methods=['POST'])
 def procesar_apuesta():
-    if 'id_usuario' not in session:
-        return redirect(url_for('Index'))
-
+    if 'id_usuario' not in session: return redirect(url_for('Index'))
     monto = float(request.form.get('monto_apuesta'))
     id_usuario = session['id_usuario']
-    datos_json = request.form.get('datos_apuestas')
-    lista_apuestas = json.loads(datos_json)
-    
+    lista_apuestas = json.loads(request.form.get('datos_apuestas'))
     cur = mysql.connection.cursor()
-    
-    #  Verificar Saldo
     cur.execute("SELECT saldo FROM usuarios WHERE id_usuario=%s", (id_usuario,))
     saldo_actual = float(cur.fetchone()[0])
-
     if monto > saldo_actual:
         flash("❌ Saldo insuficiente")
         return redirect(url_for('panel'))
-
-    #  Calcular Ganancia
     cuota_total = 1
-    for apuesta in lista_apuestas:
-        cuota_total *= float(apuesta['cuota'])
+    for apuesta in lista_apuestas: cuota_total *= float(apuesta['cuota'])
     ganancia = round(monto * cuota_total, 2)
-
-    #  Guardar Ticket
-    cur.execute("""
-        INSERT INTO tickets (id_usuario, monto_total, ganancia_posible, estado, fecha)
-        VALUES (%s, %s, %s, 'pendiente', NOW())
-    """, (id_usuario, monto, ganancia))
+    cur.execute("INSERT INTO tickets (id_usuario, monto_total, ganancia_posible, estado, fecha) VALUES (%s, %s, %s, 'pendiente', NOW())", (id_usuario, monto, ganancia))
     id_ticket = cur.lastrowid
-
-    #  Guardar Detalles
     for apuesta in lista_apuestas:
-        cur.execute("""
-            INSERT INTO detalles_apuesta (id_ticket, id_partido, seleccion, cuota_momento)
-            VALUES (%s, %s, %s, %s)
-        """, (id_ticket, apuesta['idPartido'], apuesta['seleccion'], apuesta['cuota']))
-
-    #  Descontar dinero
+        cur.execute("INSERT INTO detalles_apuesta (id_ticket, id_partido, seleccion, cuota_momento) VALUES (%s, %s, %s, %s)", (id_ticket, apuesta['idPartido'], apuesta['seleccion'], apuesta['cuota']))
     cur.execute("UPDATE usuarios SET saldo = saldo - %s WHERE id_usuario = %s", (monto, id_usuario))
     mysql.connection.commit()
-    
     session['saldo'] = saldo_actual - monto
     flash(f"✅ Apuesta realizada. Ticket #{id_ticket}. Ganancia: ${ganancia}")
-    
     return redirect(url_for('panel'))
-
-# ==========================================
-# HISTORIAL DE APUESTAS
-# ==========================================
 
 @app.route('/mis_apuestas')
 def mis_apuestas():
-    if 'id_usuario' not in session:
-        return redirect(url_for('Index'))
-
+    if 'id_usuario' not in session: return redirect(url_for('Index'))
     id_usuario = session['id_usuario']
     cur = mysql.connection.cursor()
-
-    #  Tickets
     cur.execute("SELECT * FROM tickets WHERE id_usuario = %s ORDER BY fecha DESC", (id_usuario,))
     tickets_data = list(cur.fetchall())
-
     if not tickets_data:
         return render_template('mis_apuestas.html', tickets=[], nombre=session['nombre'], saldo=session['saldo'])
-
     columnas_ticket = [d[0] for d in cur.description]
     mis_tickets = []
-
     for row in tickets_data:
         t = dict(zip(columnas_ticket, row))
-        
-        #  Detalles
-        cur.execute("""
-            SELECT d.seleccion, d.cuota_momento, p.local, p.visitante, p.liga 
-            FROM detalles_apuesta d
-            JOIN partidos p ON d.id_partido = p.id
-            WHERE d.id_ticket = %s
-        """, (t['id_ticket'],))
-        
+        cur.execute("SELECT d.seleccion, d.cuota_momento, p.local, p.visitante, p.liga FROM detalles_apuesta d JOIN partidos p ON d.id_partido = p.id WHERE d.id_ticket = %s", (t['id_ticket'],))
         detalles_data = list(cur.fetchall())
-        
         items = []
         if detalles_data:
             cols_det = [d[0] for d in cur.description]
-            for d in detalles_data:
-                items.append(dict(zip(cols_det, d)))
-        
+            for d in detalles_data: items.append(dict(zip(cols_det, d)))
         t['lista_detalles'] = items
         mis_tickets.append(t)
-
-    return render_template('mis_apuestas.html', 
-            tickets=mis_tickets, 
-            nombre=session['nombre'], 
-            saldo=session['saldo'])
-
-# ==========================================
-# ADMINISTRACIÓN DE USUARIOS
-# ==========================================
+    return render_template('mis_apuestas.html', tickets=mis_tickets, nombre=session['nombre'], saldo=session['saldo'])
 
 @app.route('/admin')
-def admin():
-    return render_template('admin.html')
+def admin(): return render_template('admin.html')
 
 @app.route('/admin/usuarios')
 def admin_usuarios():
@@ -252,115 +343,135 @@ def admin_usuarios():
     columnas = [d[0] for d in cur.description]
     usuarios = [dict(zip(columnas, row)) for row in cur.fetchall()]
     return render_template('usuarios.html', usuarios=usuarios)
+# ==========================================
+#  ACCIÓN DE ELIMINAR (MODO NUCLEAR ☢️)
+# ==========================================
+@app.route('/delete_user/<string:id>')
+def delete_user(id):
+    # 1. Seguridad: Verificar si es admin
+    if 'rol' not in session or session['rol'] != 'admin':
+        flash("⛔ Acceso denegado")
+        return redirect(url_for('panel'))
 
+    cur = mysql.connection.cursor()
+    
+    try:
+        # Recuperar nombre para borrar foto (si existe)
+        cur.execute("SELECT nombre FROM usuarios WHERE id_usuario = %s", (id,))
+        dato = cur.fetchone()
+        nombre_usuario = dato[0] if dato else None
+
+        # --- LIMPIEZA EN CASCADA ---
+        
+        # 1. Borrar Detalles de Apuestas (Nietos)
+        cur.execute("""
+            DELETE FROM detalles_apuesta 
+            WHERE id_ticket IN (SELECT id_ticket FROM tickets WHERE id_usuario = %s)
+        """, (id,))
+        
+        # 2. Borrar Tickets (Hijos)
+        cur.execute("DELETE FROM tickets WHERE id_usuario = %s", (id,))
+        
+        # 3. Borrar Recargas (Hijos)
+        cur.execute("DELETE FROM recarga WHERE id_usuario = %s", (id,))
+        
+        # 4. Borrar Datos Biométricos (Foto)
+        if nombre_usuario:
+            cur.execute("DELETE FROM datos_biometricos WHERE nombre_usuario = %s", (nombre_usuario,))
+        
+        # 5. FINALMENTE: Borrar Usuario
+        cur.execute("DELETE FROM usuarios WHERE id_usuario = %s", (id,))
+        
+        mysql.connection.commit()
+        flash('✅ Usuario eliminado exitosamente')
+        
+    except Exception as e:
+        mysql.connection.rollback()
+        print(f"Error crítico: {e}")
+        flash(f'❌ Error técnico: {e}')
+
+    return redirect(url_for('admin_usuarios'))
+
+    # ==========================================
+#  CREAR USUARIO DESDE ADMIN
+# ==========================================
 @app.route('/admin/crear_usuario', methods=['POST'])
 def admin_crear_usuario():
+    # 1. Seguridad: Verificar si es admin
+    if 'rol' not in session or session['rol'] != 'admin':
+        return redirect(url_for('panel'))
+
     if request.method == 'POST':
+        # 2. Obtener datos del formulario del modal
         nombre = request.form['nombre']
         apellido = request.form['apellido']
         email = request.form['email']
         contraseña = request.form['contraseña']
-        saldo = request.form['saldo']
+        saldo = request.form['saldo'] # El admin puede decidir el saldo inicial
+
+        # 3. Guardar en Base de Datos
         cur = mysql.connection.cursor()
         cur.execute("INSERT INTO usuarios (nombre, apellido, email, contraseña, saldo, fecha_registro) VALUES (%s, %s, %s, %s, %s, NOW())", (nombre, apellido, email, contraseña, saldo))
         mysql.connection.commit()
-        flash("Usuario creado")
-        return redirect(url_for('admin_usuarios'))
-
-@app.route('/eliminar_usuario/<string:id>')
-def eliminar_usuario(id):
-    cur = mysql.connection.cursor()
-    cur.execute("DELETE FROM recarga WHERE id_usuario = %s", (id,))
-    cur.execute("DELETE FROM tickets WHERE id_usuario = %s", (id,))
-    cur.execute("DELETE FROM usuarios WHERE id_usuario = %s", (id,))
-    mysql.connection.commit()
-    flash("Usuario eliminado")
+        
+        flash("✅ Usuario creado exitosamente desde el panel.")
+        
     return redirect(url_for('admin_usuarios'))
 
-@app.route('/editar_usuario/<string:id>', methods=['POST'])
-def editar_usuario(id):
-    if request.method == 'POST':
-        nombre = request.form['nombre']
-        apellido = request.form['apellido']
-        email = request.form['email']
-        contraseña = request.form['contraseña']
-        saldo = request.form['saldo']
-        cur = mysql.connection.cursor()
-        cur.execute("UPDATE usuarios SET nombre=%s, apellido=%s, email=%s, contraseña=%s, saldo=%s WHERE id_usuario=%s", (nombre, apellido, email, contraseña, saldo, id))
-        mysql.connection.commit()
-        flash("Usuario actualizado")
-        return redirect(url_for('admin_usuarios'))
-
-# ==========================================
-# ADMINISTRACIÓN DE PARTIDOS 
+    # ==========================================
+#  GESTIÓN DE PARTIDOS (ADMIN)
 # ==========================================
 
 @app.route('/admin/partidos')
 def admin_partidos():
+    # 1. Seguridad
+    if 'rol' not in session or session['rol'] != 'admin':
+        return redirect(url_for('panel'))
+
+    # 2. Consultar partidos
     cur = mysql.connection.cursor()
-    cur.execute("SELECT id, categoria, liga, local, visitante, tiempo, cuota_1, cuota_x, cuota_2 FROM partidos")
-    columnas = [desc[0] for desc in cur.description]
+    cur.execute("SELECT * FROM partidos ORDER BY id DESC")
+    columnas = [d[0] for d in cur.description]
     partidos = [dict(zip(columnas, row)) for row in cur.fetchall()]
+    
+    # 3. Mostrar la página (que crearemos en el paso 2)
     return render_template('partidos.html', partidos=partidos)
 
 @app.route('/admin/crear_partido', methods=['POST'])
 def admin_crear_partido():
+    if 'rol' not in session or session['rol'] != 'admin': return redirect(url_for('panel'))
+
     if request.method == 'POST':
-        id = request.form['id']
-        categoria = request.form['categoria']
         liga = request.form['liga']
         local = request.form['local']
-        img_local = request.form['img_local']
         visitante = request.form['visitante']
-        img_visitante = request.form['img_visitante']
-        tiempo = request.form['tiempo']
-        cuota_1 = request.form['cuota_1']
-        cuota_x = request.form['cuota_x']
-        cuota_2 = request.form['cuota_2']
+        tiempo = request.form['tiempo'] # Ej: "Mañana 15:00"
+        c1 = request.form['cuota_1']
+        cx = request.form['cuota_x']
+        c2 = request.form['cuota_2']
+        # Imágenes por defecto (si no subes ninguna)
+        img_local = "escudo_generico.png" 
+        img_visitante = "escudo_generico.png"
 
         cur = mysql.connection.cursor()
         cur.execute("""
-            INSERT INTO partidos (id, categoria, liga, local, img_local, visitante, img_visitante, tiempo, cuota_1, cuota_x, cuota_2)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (id, categoria, liga, local, img_local, visitante, img_visitante, tiempo, cuota_1, cuota_x, cuota_2))
+            INSERT INTO partidos (liga, local, visitante, tiempo, cuota_1, cuota_x, cuota_2, img_local, img_visitante, categoria)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'futbol')
+        """, (liga, local, visitante, tiempo, c1, cx, c2, img_local, img_visitante))
         mysql.connection.commit()
-        flash("Partido creado")
-        return redirect(url_for('admin_partidos'))
-
+        flash("✅ Partido creado correctamente")
+        
+    return redirect(url_for('admin_partidos'))
 
 @app.route('/eliminar_partido/<string:id>')
 def eliminar_partido(id):
+    if 'rol' not in session or session['rol'] != 'admin': return redirect(url_for('panel'))
+    
     cur = mysql.connection.cursor()
-    cur.execute("DELETE FROM detalles_apuesta WHERE id_partido = %s", (id,))
     cur.execute("DELETE FROM partidos WHERE id = %s", (id,))
     mysql.connection.commit()
-    flash("Partido eliminado")
+    flash("🗑️ Partido eliminado")
     return redirect(url_for('admin_partidos'))
-
-@app.route('/editar_partido/<string:id>', methods=['POST'])
-def editar_partido(id):
-    if request.method == 'POST':
-        categoria = request.form['categoria']
-        liga = request.form['liga']
-        local = request.form['local']
-        visitante = request.form['visitante']
-        tiempo = request.form['tiempo']
-        cuota_1 = request.form['cuota_1']
-        cuota_x = request.form['cuota_x']
-        cuota_2 = request.form['cuota_2']
-
-        print(f"Editando partido {id}: {local} vs {visitante}") 
-
-        cur = mysql.connection.cursor()
-        cur.execute("""
-            UPDATE partidos
-            SET categoria=%s, liga=%s, local=%s, visitante=%s, tiempo=%s, cuota_1=%s, cuota_x=%s, cuota_2=%s
-            WHERE id=%s
-        """, (categoria, liga, local, visitante, tiempo, cuota_1, cuota_x, cuota_2, id))
-        
-        mysql.connection.commit()
-        flash("Partido actualizado correctamente")
-        return redirect(url_for('admin_partidos'))
 
 if __name__ == '__main__':
     app.run(port=3000, debug=True)

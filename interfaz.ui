@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>550</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>BETUTM 71 - Biometría</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background-color: #1c1c1c; color: white;</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QLabel" name="label_video">
+    <property name="geometry">
+     <rect>
+      <x>50</x>
+      <y>20</y>
+      <width>500</width>
+      <height>350</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string>border: 2px solid #ffc107; background-color: black;</string>
+    </property>
+    <property name="text">
+     <string>Cámara...</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   
+   <widget class="QPushButton" name="btn_login">
+    <property name="geometry">
+     <rect>
+      <x>50</x>
+      <y>400</y>
+      <width>240</width>
+      <height>60</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string>background-color: #28a745; color: white; font-weight: bold; font-size: 16px; border-radius: 10px;</string>
+    </property>
+    <property name="text">
+     <string>🔓 INICIAR SESIÓN</string>
+    </property>
+   </widget>
+
+   <widget class="QPushButton" name="btn_registro">
+    <property name="geometry">
+     <rect>
+      <x>310</x>
+      <y>400</y>
+      <width>240</width>
+      <height>60</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string>background-color: #17a2b8; color: white; font-weight: bold; font-size: 16px; border-radius: 10px;</string>
+    </property>
+    <property name="text">
+     <string>📷 REGISTRAR MI CARA</string>
+    </property>
+   </widget>
+
+   <widget class="QLabel" name="label_instruccion">
+    <property name="geometry">
+     <rect>
+      <x>50</x>
+      <y>480</y>
+      <width>500</width>
+      <height>40</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Selecciona una opción para continuar</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

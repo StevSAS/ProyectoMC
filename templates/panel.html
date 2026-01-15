@@ -25,6 +25,12 @@
                 </a>
                 {% endif %}
 
+                {% if not tiene_rostro %}
+                <a href="{{ url_for('vista_registro_facial') }}" style="background-color: #007bff; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; margin-right: 10px; font-weight: bold; font-size: 14px;" title="Configurar acceso biométrico">
+                    📷 Vincular Rostro
+                </a>
+                {% endif %}
+
                 <a href="/recargar" class="btn-action btn-deposit" title="Depositar">
                     <span class="icon">💰</span> Depositar
                 </a>
@@ -46,7 +52,6 @@
             <div class="menu-item" onclick="filtrar('basket', this)">🏀 Basket</div>
             <div class="menu-item" onclick="filtrar('tenis', this)">🎾 Tenis</div>
             <div class="menu-item" onclick="filtrar('ufc', this)">🥊 UFC</div>
-            <div class="menu-item" onclick="filtrar('carrera', this)">🏎️ carrera</div>
         </aside>
 
         <main class="content">

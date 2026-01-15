@@ -43,7 +43,8 @@
                 <td>
                     <div class="action-container">
                         <button class="btn-icon btn-edit" onclick="abrirEditar('{{u.id_usuario}}', '{{u.nombre}}', '{{u.apellido}}', '{{u.email}}', '{{u.contraseña}}', '{{u.saldo}}')">✏️</button>
-                        <a href="/eliminar_usuario/{{ u.id_usuario }}" class="btn-icon btn-delete-user" onclick="return confirm('¿Borrar este usuario permanentemente?')">🗑️</a>
+                        
+                        <a href="/delete_user/{{ u.id_usuario }}" class="btn-icon btn-delete-user" onclick="return confirm('¿Borrar este usuario permanentemente? Se borrarán también sus apuestas y datos faciales.')">🗑️</a>
                     </div>
                 </td>
             </tr>
@@ -94,6 +95,7 @@
         document.getElementById('edit_email').value = email;
         document.getElementById('edit_contraseña').value = password;
         document.getElementById('edit_saldo').value = saldo;
+        // La acción se ajustará dinámicamente
         document.getElementById('formEditar').action = "/editar_usuario/" + id;
     }
     

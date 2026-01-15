@@ -1259,3 +1259,121 @@ input[type="number"] {
     transform: translateY(-2px); 
     box-shadow: 0 6px 15px rgba(255, 193, 7, 0.5);
 }
+
+/* --- ESTILOS PARA LA CÁMARA CON SILUETA --- */
+.contenedor-camara {
+    position: relative;
+    width: 640px;
+    height: 480px;
+    margin: 0 auto;
+    border: 5px solid #ffc107;
+    background-color: #000;
+}
+
+.video-stream {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.silueta-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('../img/silueta.png'); 
+    background-size: contain; 
+    background-repeat: no-repeat;
+    background-position: center bottom;
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 10;
+}
+/* =========================================
+   ESTILOS PARA LOGIN/REGISTRO FACIAL
+   ========================================= */
+
+.marco-camara {
+    position: relative; /* Indispensable para que la silueta se pegue encima */
+    width: 640px;
+    height: 480px;
+    margin: 20px auto; /* Centrado */
+    border: 5px solid #28a745; /* Borde VERDE por defecto (Login) */
+    border-radius: 10px;
+    overflow: hidden; /* Corta lo que sobresalga */
+    background-color: #000;
+}
+
+/* Variación para el borde de Registro (opcional, si quieres diferenciarlo) */
+.marco-camara.registro {
+    border-color: #ffc107; /* Borde DORADO para registro */
+}
+
+.video-feed {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.silueta-overlay {
+    position: absolute; /* Se coloca FLOTANDO sobre el video */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    
+    /* Ruta relativa desde la carpeta 'css' hacia la carpeta 'img' */
+    background-image: url('../Img/silueta.png');
+    
+    background-position: center center;
+    background-size: 50%; /* Ajusta el tamaño de la cabeza aquí */
+    background-repeat: no-repeat;
+    opacity: 0.5; /* Transparencia */
+    pointer-events: none; /* Los clics atraviesan la imagen */
+    z-index: 10;
+}
+
+.btn-entrar {
+    background-color: #007bff;
+    color: white;
+    padding: 15px 30px;
+    font-size: 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+    font-weight: bold;
+}
+.btn-entrar:hover { background-color: #0056b3; }
+
+.alerta { 
+    color: #ff4444; 
+    font-weight: bold; 
+    background-color: rgba(255, 68, 68, 0.1);
+    padding: 10px;
+    display: inline-block;
+    border-radius: 5px;
+    margin: 10px 0;
+}
+/* --- ESTILOS ESPECÍFICOS PARA REGISTRO --- */
+
+/* Borde DORADO para diferenciar que estás registrando */
+.marco-camara.registro {
+    border-color: #ffc107; 
+}
+
+/* Botón VERDE para la acción de Guardar */
+.btn-guardar {
+    background-color: #28a745;
+    color: white;
+    padding: 15px 30px;
+    font-size: 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+    font-weight: bold;
+}
+.btn-guardar:hover { background-color: #218838; }

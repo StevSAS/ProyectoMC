@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Login Facial - BETUTM</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <script>
+        // --- SCRIPT DE AUTO-DETECCIÓN ---
+        window.onload = function() {
+            // Esperamos 3 segundos para que la cámara enfoque bien
+            let tiempoEspera = 3000; 
+            
+            // Función que simula el clic
+            function intentarLogin() {
+                let boton = document.querySelector('.btn-entrar');
+                if(boton) {
+                    boton.innerHTML = "🔄 ESCAÑEANDO..."; // Cambia texto
+                    boton.style.backgroundColor = "#ffc107"; // Cambia a amarillo
+                    boton.click(); // ¡CLIC AUTOMÁTICO!
+                }
+            }
+
+            // Iniciamos el temporizador
+            setTimeout(intentarLogin, tiempoEspera);
+        };
+    </script>
+</head>
+<body style="background-color: #1c1c1c; color: white; text-align: center; font-family: Arial, sans-serif;">
+
+    <h1>Acceso Biométrico</h1>
+    <p>Mira fijamente a la cámara. Escaneando automáticamente...</p>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alerta">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="marco-camara">
+        <img src="{{ url_for('video_feed') }}" class="video-feed" alt="Cámara">
+        <div class="silueta-overlay"></div>
+    </div>
+
+    <br>
+
+    <form action="/verificar_rostro_db" method="POST">
+        <button type="submit" class="btn-entrar">🔓 DETECTAR Y ENTRAR</button>
+    </form>
+    
+    <br>
+    <a href="/" style="color: #ffc107; text-decoration: none;">Volver al Inicio</a>
+</body>
+</html>
