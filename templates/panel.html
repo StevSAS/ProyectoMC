@@ -31,10 +31,10 @@
                 </a>
                 {% endif %}
 
-                <a href="/recargar" class="btn-action btn-deposit" title="Depositar">
+                <a href="/recargar" class="btn-action" title="Depositar">
                     <span class="icon">💰</span> Depositar
                 </a>
-                <a href="/mis_apuestas" class="btn-action btn-history" title="Mis Apuestas">
+                <a href="/mis_apuestas" class="btn-action" title="Mis Apuestas">
                     <span class="icon">📄</span> Historial
                 </a>
                 <a href="/logout" class="btn-action btn-logout" title="Salir">
@@ -71,10 +71,10 @@
                 <div class="match-info">
                     <div class="liga-tag">{{ p.liga }} • {{ p.tiempo }}</div>
                     <div class="team-row">
-                        <img src="{{ url_for('static', filename='img/' + p.img_local) }}" class="team-logo" onerror="this.style.display='none'"> {{ p.local }}
+                        <span style="margin-right:8px; font-size:1.2em;">🛡️</span> {{ p.local }}
                     </div>
                     <div class="team-row">
-                        <img src="{{ url_for('static', filename='img/' + p.img_visitante) }}" class="team-logo" onerror="this.style.display='none'"> {{ p.visitante }}
+                        <span style="margin-right:8px; font-size:1.2em;">🛡️</span> {{ p.visitante }}
                     </div>
                 </div>
                 <div class="odds-grid">

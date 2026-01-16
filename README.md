@@ -5,3 +5,4 @@ Colaboradores:
 Alcivar Steven
 Amundaray José
 Mejia Adriana
+Loor Jandry

@@ -9,51 +9,53 @@ from threading import Thread
 try:
     from app import app
 except ImportError:
-    print("❌ ERROR: No encuentro 'app.py'. Asegúrate de que está en la misma carpeta.")
+    print("❌ ERROR: No encuentro 'app.py'.")
     time.sleep(5)
     sys.exit()
 
 def arrancar_servidor():
     """
     Arranca el servidor Flask en segundo plano.
-    Usamos el puerto 5000 y threaded=True para evitar bloqueos.
+    Usamos el puerto 5000 (el que te funciona) y threaded=True para evitar bloqueos.
     """
-    print("🚀 Iniciando Motor BETUTM (Puerto 5000)...")
-    # MANTENER 'threaded=True' ES OBLIGATORIO para que no se cierre con la cámara
+    print("🚀 Iniciando Motor BETUTM en Puerto 5000...")
+    # CAMBIO REALIZADO: Puerto 5000
     app.run(port=5000, debug=False, threaded=True, use_reloader=False)
 
 def abrir_modo_app():
     """
     Abre la interfaz en una ventana limpia tipo 'Aplicación de Escritorio'
-    sin barras de navegación, botones de atrás/adelante, etc.
+    usando el motor de Chrome/Edge instalado en el sistema.
     """
-    # Esperamos 2 segundos a que el servidor arranque
+    # Damos tiempo al servidor para que arranque
     time.sleep(2)
     
+    # CAMBIO REALIZADO: Apuntamos al puerto 5000
     url = "http://localhost:5000"
     print("🖥️ Abriendo Ventana de Aplicación...")
 
-    # Buscamos Google Chrome instalado para usar su "Modo App"
+    # Rutas comunes de Google Chrome
     rutas_chrome = [
         r"C:\Program Files\Google\Chrome\Application\chrome.exe",
         r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
         r"C:\Users\%USERNAME%\AppData\Local\Google\Chrome\Application\chrome.exe"
     ]
     
-    chrome_path = None
+    chrome_encontrado = None
 
+    # Buscamos dónde está instalado Chrome
     for ruta in rutas_chrome:
         ruta_real = os.path.expandvars(ruta)
         if os.path.exists(ruta_real):
-            chrome_path = ruta_real
+            chrome_encontrado = ruta_real
             break
     
-    if chrome_path:
-        # EL SECRETO: --app=URL hace que parezca un programa real, no una web
-        os.system(f'"{chrome_path}" --app={url} --window-size=1200,800')
+    if chrome_encontrado:
+        # EL TRUCO DE MAGIA: --app=URL
+        # Esto abre la web sin barras de navegación, pareciendo una app nativa.
+        os.system(f'"{chrome_encontrado}" --app={url} --window-size=1200,800')
     else:
-        # Si no tiene Chrome, abrimos el navegador normal
-        print("⚠️ No encontré Chrome. Abriendo navegador predeterminado...")
+        # Si no hay Chrome, usamos el navegador por defecto
         webbrowser.open(url)
 
 if __name__ == "__main__":
@@ -65,10 +67,11 @@ if __name__ == "__main__":
     # B. Abrimos la ventana visual (La Cara)
     abrir_modo_app()
     
-    # C. Mantenemos el programa vivo
-    print("✅ Aplicación ejecutándose. Cierra la ventana para terminar.")
+    # C. Mantenemos el programa vivo esperando
+    print("✅ Sistema Operativo. Presiona Ctrl+C en esta terminal para cerrar.")
     while True:
         try:
             time.sleep(1)
         except KeyboardInterrupt:
+            print("\n👋 Cerrando sistema...")
             break
